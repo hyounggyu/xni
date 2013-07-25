@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    xni.tiff
+    ~~~~~~~~
+
+    :copyright: (c) 2013 by Hyounggyu Kim.
+    :license: GPL, see LICENSE for more details.
+"""
+
 import sys, collections
 import struct
 import numpy as np

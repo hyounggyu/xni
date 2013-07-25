@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+    xni.shift
+    ~~~~~~~~~
+
+    :copyright: (c) 2013 by Hyounggyu Kim.
+    :license: GPL, see LICENSE for more details.
+"""
+
 import tiff, config
 import numpy as np
 from scipy.interpolate import interp1d

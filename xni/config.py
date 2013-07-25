@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+    xni.config
+    ~~~~~~~~~~
+
+    :copyright: (c) 2013 by Hyounggyu Kim.
+    :license: GPL, see LICENSE for more details.
+"""
+
 import sys, os, re, glob, json
 from functools import partial
 from PySide import QtGui, QtCore

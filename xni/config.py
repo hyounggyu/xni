@@ -1,52 +1,171 @@
 # -*- coding: utf-8 -*-
-from PySide import QtGui
-import sys, os, glob
+import sys, os, re, glob, json
+from functools import partial
+from PySide import QtGui, QtCore
 
-def Config():
-    config = {}
+class ConfigWindow(QtGui.QMainWindow):
 
-    # set source image directory
-    config['src_dir'] = QtGui.QFileDialog.getExistingDirectory( \
-        caption="Select source image directory")
+    conf = { 'Base': {} }
 
-    # set background file
-    config['bgnd_fname'], ok = QtGui.QFileDialog.getOpenFileName( \
-        caption="Select background image file", \
-        filter="TIFF image Files (*.tif *.tiff)")
-    if not ok:
-        return False
+    def __init__(self, parent=None):
+        super(ConfigWindow, self).__init__(parent)
+        self.conf['Base']['srcdir'] = os.curdir
+        self.initUI()
 
-    # set dark image file
-    config['dark_fname'], ok = QtGui.QFileDialog.getOpenFileName( \
-        caption="Select dark image file", \
-        filter="TIFF image Files (*.tif *.tiff)")
-    # no dark image
-    if not ok:
-        config['dark_fname'] = ''
+    def initUI(self):
+        self.srcdirLabel  = QtGui.QLabel('Source directory')
+        self.prefixLabel  = QtGui.QLabel('Image file prefix')
+        self.nprojLabel   = QtGui.QLabel('Number of projections')
+        self.nprojLabel2  = QtGui.QLabel()
+        self.bgndimgLabel = QtGui.QLabel('Background image file')
+        self.darkimgLabel = QtGui.QLabel('Dark image file')
+        self.sftdirLabel  = QtGui.QLabel('Shifted image directory')
+        self.posfnLabel   = QtGui.QLabel('Position data file')
 
-    # set image prefix and name of image files
-    config['prefix'], ok = QtGui.QInputDialog.getText(None, \
-        "Input image prefix", "Set prefix")
-    if not ok or config['prefix'] == u'':
-        return False
-    # it matches not only "tif" but also "tif?"
-    # and it assumes all images are same rotation angle.
-    fnames = glob.glob(os.path.join(config['src_dir'], config['prefix']+"*.tif?"))
-    config['img_fnames'] = sorted([ os.path.basename(fname) for fname in fnames ])
+        self.srcdirEdit   = QtGui.QLineEdit()
+        self.prefixEdit   = QtGui.QLineEdit()
+        self.bgndimgEdit  = QtGui.QLineEdit()
+        self.darkimgEdit  = QtGui.QLineEdit()
+        self.sftdirEdit   = QtGui.QLineEdit()
+        self.posfnEdit    = QtGui.QLineEdit()
 
-    # set position file
-    config['pos_fname'], ok = QtGui.QFileDialog.getOpenFileName( \
-        caption="Select position data file", \
-        filter="Text Files (*.txt *.csv)")
-    if not ok:
-        return False
+        self.srcdirBtn    = QtGui.QPushButton('Select')
+        self.bgndimgBtn   = QtGui.QPushButton('Select')
+        self.darkimgBtn   = QtGui.QPushButton('Select')
+        self.sftdirBtn    = QtGui.QPushButton('Select')
+        self.posfnBtn     = QtGui.QPushButton('Select')
+        self.loadBtn      = QtGui.QPushButton('Load')
+        self.saveBtn      = QtGui.QPushButton('Save')
+        self.exitBtn      = QtGui.QPushButton('Exit')
 
-    # set shifted directory
-    config['sft_dir'] = QtGui.QFileDialog.getExistingDirectory( \
-        caption="Select shifted image directory")
+        self.srcdirEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
+        self.srcdirEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
+        self.prefixEdit.textChanged[str].connect(self.checkPrefix)
+        self.prefixEdit.textEdited[str].connect(self.checkPrefix)
+        self.bgndimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
+        self.bgndimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
+        self.darkimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'darkimg'))
+        self.darkimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'darkimg'))
+        self.sftdirEdit.textChanged[str].connect(partial(self.setConfig, 'Shift', 'sftdir'))
+        self.sftdirEdit.textEdited[str].connect(partial(self.setConfig, 'Shift', 'sftdir'))
+        self.posfnEdit.textChanged[str].connect(partial(self.setConfig, 'Shift', 'posfn'))
+        self.posfnEdit.textEdited[str].connect(partial(self.setConfig, 'Shift', 'posfn'))
 
-    return config
+        self.srcdirBtn.clicked.connect(partial(self.selectDirectory, self.srcdirEdit))
+        self.bgndimgBtn.clicked.connect(partial(self.selectFile, self.bgndimgEdit, 'TIFF image File (*.tif *.tiff)'))
+        self.darkimgBtn.clicked.connect(partial(self.selectFile, self.darkimgEdit, 'TIFF image File (*.tif *.tiff)'))
+        self.sftdirBtn.clicked.connect(partial(self.selectDirectory, self.sftdirEdit))
+        self.posfnBtn.clicked.connect(partial(self.selectFile, self.posfnEdit, 'Comma Seperated Values File (*.txt *.csv)'))
+        self.loadBtn.clicked.connect(self.loadConfig)
+        self.saveBtn.clicked.connect(self.saveConfig)
+        self.exitBtn.clicked.connect(QtCore.QCoreApplication.instance().quit)
+
+        grid1 = QtGui.QGridLayout()
+        grid1.setSpacing(10)
+        grid1.addWidget(self.srcdirLabel,  1, 0)
+        grid1.addWidget(self.srcdirEdit,   1, 1)
+        grid1.addWidget(self.srcdirBtn,    1, 2)
+        grid1.addWidget(self.prefixLabel,  2, 0)
+        grid1.addWidget(self.prefixEdit,   2, 1)
+        grid1.addWidget(self.nprojLabel,   3, 0)
+        grid1.addWidget(self.nprojLabel2,  3, 1)
+        grid1.addWidget(self.bgndimgLabel, 4, 0)
+        grid1.addWidget(self.bgndimgEdit,  4, 1)
+        grid1.addWidget(self.bgndimgBtn,   4, 2)
+        grid1.addWidget(self.darkimgLabel, 5, 0)
+        grid1.addWidget(self.darkimgEdit,  5, 1)
+        grid1.addWidget(self.darkimgBtn,   5, 2)
+        group1 = QtGui.QGroupBox('Base Configuration')
+        group1.setLayout(grid1)
+
+        grid2 = QtGui.QGridLayout()
+        grid2.setSpacing(10)
+        grid2.addWidget(self.sftdirLabel,  1, 0)
+        grid2.addWidget(self.sftdirEdit,   1, 1)
+        grid2.addWidget(self.sftdirBtn,    1, 2)
+        grid2.addWidget(self.posfnLabel,   2, 0)
+        grid2.addWidget(self.posfnEdit,    2, 1)
+        grid2.addWidget(self.posfnBtn,     2, 2)
+        group2 = QtGui.QGroupBox('Shift Configuration')
+        # Checkable?
+#        group2.setCheckable(True)
+#        group2.setChecked(False)
+        group2.setLayout(grid2)
+
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.loadBtn)
+        hbox.addWidget(self.saveBtn)
+        hbox.addWidget(self.exitBtn)
+
+        centralWidget = QtGui.QWidget(self)
+        vbox = QtGui.QVBoxLayout(centralWidget)
+        vbox.addWidget(group1)
+        vbox.addWidget(group2)
+        vbox.addStretch(1)
+        vbox.addLayout(hbox)
+
+        self.setCentralWidget(centralWidget)
+        self.setWindowTitle('Configuration')
+
+    def selectDirectory(self, widget):
+        directory = QtGui.QFileDialog.getExistingDirectory(self, dir=self.conf['Base']['srcdir'], caption="Select directory")
+        widget.setText(directory)
+
+    def selectFile(self, widget, _filter):
+        fn, _ = QtGui.QFileDialog.getOpenFileName(self, caption="Select file", dir=self.conf['Base']['srcdir'], filter=_filter)
+        widget.setText(fn)
+
+    def setConfig(self, section, option, text):
+        if not section in self.conf:
+            self.conf[section] = dict()
+        self.conf[section][option] = text
+
+    def checkPrefix(self, text):
+        srcdir = self.conf['Base']['srcdir']
+        pattern = '^%s.*(tif|tiff)$' % text
+        match = re.compile(pattern, re.I).match
+        fns = []
+        for fn in os.listdir(srcdir):
+            fn = os.path.normcase(fn)
+            if match(fn) is not None:
+                fns.append(fn)
+        self.setConfig('Base', 'prefix', text)
+        self.nprojLabel2.setText('%d (tiff files)' % len(fns))
+
+    def loadConfig(self):
+        fn, _ = QtGui.QFileDialog.getOpenFileName(self, caption="Load configuration", dir=self.conf['Base']['srcdir'], filter="Json file (*.json)")
+        # try:
+        f = open(fn, "r")
+        # except:
+        self.conf = json.loads(f.read())
+        # if 'Base' dose not exist
+        c = self.conf['Base']
+        self.srcdirEdit.setText(self.conf['Base']['srcdir'])
+        if 'prefix' in c:
+            self.prefixEdit.setText(self.conf['Base']['prefix'])
+        if 'bgndimg' in c:
+            self.bgndimgEdit.setText(self.conf['Base']['bgndimg'])
+        if 'darkimg' in c:
+            self.darkimgEdit.setText(self.conf['Base']['darkimg'])
+
+        if 'Shift' in self.conf:
+            c = self.conf['Shift']
+            if 'sftdir' in c:
+                self.sftdirEdit.setText(self.conf['Shift']['sftdir'])
+            if 'posfn' in c:
+                self.posfnEdit.setText(self.conf['Shift']['posfn'])
+
+    def saveConfig(self):
+        fn, _ = QtGui.QFileDialog.getSaveFileName(self, caption="Save configuration", dir=self.conf['Base']['srcdir'], filter="Json file (*.json)")
+        # try:
+        f = open(fn, "w")
+        # except:
+        f.write(json.dumps(self.conf, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    c = Config()
+    cw = ConfigWindow()
+    cw.show()
+    cw.activateWindow()
+    cw.raise_()
+    sys.exit(app.exec_())

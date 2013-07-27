@@ -7,16 +7,17 @@
     :license: GPL, see LICENSE for more details.
 """
 
-import sys, os, re, glob, json
+import sys, os, json
 from functools import partial
 from PySide import QtGui, QtCore
+from utils import find_tiff_files
 
-class ConfigWindow(QtGui.QMainWindow):
+class MainWindow(QtGui.QMainWindow):
 
     conf = { 'Base': {} }
 
     def __init__(self, parent=None):
-        super(ConfigWindow, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
         self.conf['Base']['srcdir'] = os.curdir
         self.initUI()
 
@@ -48,8 +49,8 @@ class ConfigWindow(QtGui.QMainWindow):
 
         self.srcdirEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
         self.srcdirEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
-        self.prefixEdit.textChanged[str].connect(self.checkPrefix)
-        self.prefixEdit.textEdited[str].connect(self.checkPrefix)
+        self.prefixEdit.textChanged[str].connect(self.setLabelPrefix)
+        self.prefixEdit.textEdited[str].connect(self.setLabelPrefix)
         self.bgndimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
         self.bgndimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
         self.darkimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'darkimg'))
@@ -128,15 +129,8 @@ class ConfigWindow(QtGui.QMainWindow):
             self.conf[section] = dict()
         self.conf[section][option] = text
 
-    def checkPrefix(self, text):
-        srcdir = self.conf['Base']['srcdir']
-        pattern = '^%s.*(tif|tiff)$' % text
-        match = re.compile(pattern, re.I).match
-        fns = []
-        for fn in os.listdir(srcdir):
-            fn = os.path.normcase(fn)
-            if match(fn) is not None:
-                fns.append(fn)
+    def setLabelPrefix(self, text):
+        fns = find_tiff_files(self.conf['Base']['srcdir'], text)
         self.setConfig('Base', 'prefix', text)
         self.nprojLabel2.setText('%d (tiff files)' % len(fns))
 
@@ -172,8 +166,8 @@ class ConfigWindow(QtGui.QMainWindow):
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    cw = ConfigWindow()
-    cw.show()
-    cw.activateWindow()
-    cw.raise_()
+    w = MainWindow()
+    w.show()
+    w.activateWindow()
+    w.raise_()
     sys.exit(app.exec_())

@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    xni.utils
+    ~~~~~~~~~~
+
+    :copyright: (c) 2013 by Hyounggyu Kim.
+    :license: GPL, see LICENSE for more details.
+"""
+
 import os, re
 
 def find_tiff_files(_dir, prefix):

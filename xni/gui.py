@@ -32,8 +32,6 @@ class MainWindow(QtGui.QMainWindow):
     def initUI(self):
         self.srcdirLabel  = QtGui.QLabel('Source directory')
         self.prefixLabel  = QtGui.QLabel('Image file prefix')
-        self.nprojLabel   = QtGui.QLabel('Number of projections')
-        self.nprojLabel2  = QtGui.QLabel()
         self.bgndimgLabel = QtGui.QLabel('Background image file')
         self.darkimgLabel = QtGui.QLabel('Dark image file')
         self.sftdirLabel  = QtGui.QLabel('Shifted image directory')
@@ -60,8 +58,8 @@ class MainWindow(QtGui.QMainWindow):
 
         self.srcdirEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
         self.srcdirEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
-        self.prefixEdit.textChanged[str].connect(self.setLabelPrefix)
-        self.prefixEdit.textEdited[str].connect(self.setLabelPrefix)
+        self.prefixEdit.textChanged[str].connect(self.setImages)
+        self.prefixEdit.textEdited[str].connect(self.setImages)
         self.bgndimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
         self.bgndimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
         self.darkimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'darkimg'))
@@ -90,14 +88,12 @@ class MainWindow(QtGui.QMainWindow):
         grid1.addWidget(self.srcdirBtn,    1, 2)
         grid1.addWidget(self.prefixLabel,  2, 0)
         grid1.addWidget(self.prefixEdit,   2, 1)
-        grid1.addWidget(self.nprojLabel,   3, 0)
-        grid1.addWidget(self.nprojLabel2,  3, 1)
-        grid1.addWidget(self.bgndimgLabel, 4, 0)
-        grid1.addWidget(self.bgndimgEdit,  4, 1)
-        grid1.addWidget(self.bgndimgBtn,   4, 2)
-        grid1.addWidget(self.darkimgLabel, 5, 0)
-        grid1.addWidget(self.darkimgEdit,  5, 1)
-        grid1.addWidget(self.darkimgBtn,   5, 2)
+        grid1.addWidget(self.bgndimgLabel, 3, 0)
+        grid1.addWidget(self.bgndimgEdit,  3, 1)
+        grid1.addWidget(self.bgndimgBtn,   3, 2)
+        grid1.addWidget(self.darkimgLabel, 4, 0)
+        grid1.addWidget(self.darkimgEdit,  4, 1)
+        grid1.addWidget(self.darkimgBtn,   4, 2)
         group1 = QtGui.QGroupBox('Base Configuration')
         group1.setLayout(grid1)
 
@@ -135,6 +131,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.setCentralWidget(centralWidget)
         self.setWindowTitle('Configuration')
+        self.statusBar().showMessage('Ready')
 
     def selectDirectory(self, widget):
         directory = QtGui.QFileDialog.getExistingDirectory(self, dir=self.conf['Base']['srcdir'], caption="Select directory")
@@ -149,10 +146,10 @@ class MainWindow(QtGui.QMainWindow):
             self.conf[section] = dict()
         self.conf[section][option] = text
 
-    def setLabelPrefix(self, text):
-        fns = find_tiff_files(self.conf['Base']['srcdir'], text)
+    def setImages(self, text):
+        self.imgs = find_tiff_files(self.conf['Base']['srcdir'], text)
         self.setConfig('Base', 'prefix', text)
-        self.nprojLabel2.setText('%d (tiff files)' % len(fns))
+        self.statusBar().showMessage('%d (tiff files)' % len(self.imgs))
 
     def loadConfig(self):
         fn, _ = QtGui.QFileDialog.getOpenFileName(self, caption="Load configuration", dir=self.conf['Base']['srcdir'], filter="Json file (*.json)")

@@ -10,6 +10,8 @@
 import sys, os, json
 from functools import partial
 
+import numpy as np
+
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
@@ -190,7 +192,18 @@ class MainWindow(QtGui.QMainWindow):
         self.statusBar().showMessage('Error lines: '+errlines)
 
     def plotShift(self):
+        interp_x, interp_y = self.shiftimage.get_interp()
+        pos = self.shiftimage.get_pos()
+        thetas = self.shiftimage.get_thetas()
+        new_thetas = np.linspace(thetas[0], thetas[-1], 900)
+
         self.plotw = PlotWindow()
+        fig = self.plotw.getFigure()
+        ax = fig.add_subplot(111)
+        ax.plot(pos[:,0], pos[:,1], 'x', pos[:,0], pos[:,2], 'o')
+        ax.plot(new_thetas, interp_x(new_thetas))
+        ax.plot(new_thetas, interp_y(new_thetas))
+        self.plotw.showIU()
 
     def runShift(self):
         pass
@@ -198,16 +211,16 @@ class MainWindow(QtGui.QMainWindow):
 class PlotWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(PlotWindow, self).__init__(parent)
-        self.initUI()
+        self.fig = Figure(figsize=(600,600), dpi=72, facecolor=(1,1,1), edgecolor=(0,0,0))
 
-    def initUI(self):
-        fig = Figure(figsize=(600,600), dpi=72, facecolor=(1,1,1), edgecolor=(0,0,0))
-        ax = fig.add_subplot(111)
-        ax.plot([0,1])
-        canvas = FigureCanvas(fig)
+    def showIU(self):
+        canvas = FigureCanvas(self.fig)
         self.setCentralWidget(canvas)
         self.setWindowTitle('Plot')
         self.show()
+
+    def getFigure(self):
+        return self.fig
 
 class App(QtGui.QApplication):
     def __init__(self, *argv):

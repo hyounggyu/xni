@@ -18,7 +18,9 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from PySide import QtGui, QtCore
-from utils import find_tiff_files
+
+from shift import ShiftImage
+from utils import find_tiff_files, read_pos_from_csv
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -182,7 +184,10 @@ class MainWindow(QtGui.QMainWindow):
         f.write(json.dumps(self.conf, indent=4, sort_keys=True))
 
     def initShift(self):
-        pass
+        pos, errors = read_pos_from_csv(self.conf['Shift']['posfn'], 0, 5, 6)
+        self.shiftimage = ShiftImage(self.conf['Base']['srcdir'], self.conf['Shift']['sftdir'], self.imgs, pos)
+        errlines = ','.join([str(i) for i in errors])
+        self.statusBar().showMessage('Error lines: '+errlines)
 
     def plotShift(self):
         self.plotw = PlotWindow()

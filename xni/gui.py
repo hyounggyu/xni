@@ -22,6 +22,7 @@ from matplotlib.figure import Figure
 from PySide import QtGui, QtCore
 
 from shift import ShiftImage
+from tiff import imread, imwrite
 from utils import find_tiff_files, read_pos_from_csv
 
 class MainWindow(QtGui.QMainWindow):
@@ -206,7 +207,21 @@ class MainWindow(QtGui.QMainWindow):
         self.plotw.showIU()
 
     def runShift(self):
-        pass
+        # copy background and dark data (To make same image file type)
+        sftdir = self.conf['Shift']['sftdir']
+        bgndimg = self.conf['Base']['bgndimg']
+
+        self.statusBar().showMessage('Copy background and dark images')
+        tif = imread(bgndimg)
+        imwrite(os.path.join(sftdir, os.path.basename(bgndimg)), tif.to_array(), tif.get_dir())
+
+        if 'darkimg' in self.conf['Base'] and self.conf['Base']['darkimg'] != '':
+            darkimg = self.conf['Base']['darkimg']
+            tif = imread(darkimg)
+            imwrite(os.path.join(sftdir, os.path.basename(darkimg)), tif.to_array(), tif.get_dir())
+
+        self.statusBar().showMessage('Shift all projection images')
+        self.shiftimage.shift_all()
 
 class PlotWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):

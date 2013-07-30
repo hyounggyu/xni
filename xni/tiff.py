@@ -269,4 +269,4 @@ class imwrite:
 
         self.ifd_offset_off = self.fp.tell()
         self.fp.write('\x00'*4)
-        
+

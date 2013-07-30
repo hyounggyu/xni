@@ -57,9 +57,6 @@ class MainWindow(QtGui.QMainWindow):
         self.initshiftBtn = QtGui.QPushButton('Init')
         self.plotshiftBtn = QtGui.QPushButton('Plot')
         self.runshiftBtn  = QtGui.QPushButton('Run')
-        self.loadBtn      = QtGui.QPushButton('Load')
-        self.saveBtn      = QtGui.QPushButton('Save')
-        self.exitBtn      = QtGui.QPushButton('Exit')
 
         self.srcdirEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
         self.srcdirEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
@@ -82,9 +79,6 @@ class MainWindow(QtGui.QMainWindow):
         self.initshiftBtn.clicked.connect(self.initShift)
         self.plotshiftBtn.clicked.connect(self.plotShift)
         self.runshiftBtn.clicked.connect(self.runShift)
-        self.loadBtn.clicked.connect(self.loadConfig)
-        self.saveBtn.clicked.connect(self.saveConfig)
-        self.exitBtn.clicked.connect(QtCore.QCoreApplication.instance().quit)
 
         grid1 = QtGui.QGridLayout()
         grid1.setSpacing(10)
@@ -121,22 +115,33 @@ class MainWindow(QtGui.QMainWindow):
         hbox1.addWidget(self.plotshiftBtn)
         hbox1.addWidget(self.runshiftBtn)
 
-        hbox2 = QtGui.QHBoxLayout()
-        hbox2.addWidget(self.loadBtn)
-        hbox2.addWidget(self.saveBtn)
-        hbox2.addWidget(self.exitBtn)
-
         centralWidget = QtGui.QWidget(self)
         vbox = QtGui.QVBoxLayout(centralWidget)
         vbox.addStretch(1)
         vbox.addWidget(group1)
         vbox.addWidget(group2)
         vbox.addLayout(hbox1)
-        vbox.addLayout(hbox2)
-
         self.setCentralWidget(centralWidget)
-        self.setWindowTitle('Configuration')
+
         self.statusBar().showMessage('Ready')
+
+        loadAction = QtGui.QAction('Load', self)
+        loadAction.setStatusTip('Load Configuration')
+        loadAction.triggered.connect(self.loadConfig)
+        saveAction = QtGui.QAction('Save', self)
+        saveAction.setStatusTip('Save Configuration')
+        saveAction.triggered.connect(self.saveConfig)
+        quitAction = QtGui.QAction('Quit', self)
+        quitAction.setStatusTip('Quit')
+        quitAction.triggered.connect(QtCore.QCoreApplication.instance().quit)
+
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('File')
+        fileMenu.addAction(loadAction)
+        fileMenu.addAction(saveAction)
+        fileMenu.addAction(quitAction)
+
+        self.setWindowTitle('Configuration')
 
     def selectDirectory(self, widget):
         directory = QtGui.QFileDialog.getExistingDirectory(self, dir=self.conf['Base']['srcdir'], caption="Select directory")

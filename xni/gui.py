@@ -216,7 +216,6 @@ class MainWindow(QtGui.QMainWindow):
         sftdir = self.conf['Shift']['sftdir']
         bgndimg = self.conf['Base']['bgndimg']
 
-        self.statusBar().showMessage('Copy background and dark images')
         tif = imread(bgndimg)
         imwrite(os.path.join(sftdir, os.path.basename(bgndimg)), tif.to_array(), tif.get_dir())
 
@@ -225,7 +224,6 @@ class MainWindow(QtGui.QMainWindow):
             tif = imread(darkimg)
             imwrite(os.path.join(sftdir, os.path.basename(darkimg)), tif.to_array(), tif.get_dir())
 
-        self.statusBar().showMessage('Shift all projection images')
         self.shiftimage.shift_all()
 
 class PlotWindow(QtGui.QMainWindow):

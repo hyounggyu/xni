@@ -32,6 +32,8 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.conf['Base']['srcdir'] = os.curdir
+        self.shiftimage = None
+        self.imgs = None
         self.initUI()
 
     def initUI(self):
@@ -54,7 +56,6 @@ class MainWindow(QtGui.QMainWindow):
         self.darkimgBtn   = QtGui.QPushButton('Select')
         self.sftdirBtn    = QtGui.QPushButton('Select')
         self.posfnBtn     = QtGui.QPushButton('Select')
-        self.initshiftBtn = QtGui.QPushButton('Init')
         self.plotshiftBtn = QtGui.QPushButton('Plot')
         self.runshiftBtn  = QtGui.QPushButton('Run')
 
@@ -76,7 +77,6 @@ class MainWindow(QtGui.QMainWindow):
         self.darkimgBtn.clicked.connect(partial(self.selectFile, self.darkimgEdit, 'TIFF image File (*.tif *.tiff)'))
         self.sftdirBtn.clicked.connect(partial(self.selectDirectory, self.sftdirEdit))
         self.posfnBtn.clicked.connect(partial(self.selectFile, self.posfnEdit, 'Comma Seperated Values File (*.txt *.csv)'))
-        self.initshiftBtn.clicked.connect(self.initShift)
         self.plotshiftBtn.clicked.connect(self.plotShift)
         self.runshiftBtn.clicked.connect(self.runShift)
 
@@ -111,7 +111,6 @@ class MainWindow(QtGui.QMainWindow):
         group2.setLayout(grid2)
 
         hbox1 = QtGui.QHBoxLayout()
-        hbox1.addWidget(self.initshiftBtn)
         hbox1.addWidget(self.plotshiftBtn)
         hbox1.addWidget(self.runshiftBtn)
 
@@ -163,41 +162,66 @@ class MainWindow(QtGui.QMainWindow):
 
     def loadConfig(self):
         fn, _ = QtGui.QFileDialog.getOpenFileName(self, caption="Load configuration", dir=self.conf['Base']['srcdir'], filter="Json file (*.json)")
-        # try:
-        f = open(fn, "r")
-        # except:
-        self.conf = json.loads(f.read())
-        # if 'Base' dose not exist
-        c = self.conf['Base']
-        self.srcdirEdit.setText(self.conf['Base']['srcdir'])
-        if 'prefix' in c:
-            self.prefixEdit.setText(self.conf['Base']['prefix'])
-        if 'bgndimg' in c:
-            self.bgndimgEdit.setText(self.conf['Base']['bgndimg'])
-        if 'darkimg' in c:
-            self.darkimgEdit.setText(self.conf['Base']['darkimg'])
+
+        try:
+            self.conf = json.loads(open(fn, "r").read())
+        except IOError as e:
+            self.msgBox("IOError({0}): {1}".format(e.errno, e.strerror))
+            return
+        except ValueError as e:
+            self.msgBox("ValueError: " + e.message)
+            return
+
+        if 'Base' in self.conf:
+            c = self.conf['Base']
+            if 'srcdir' in c:
+                self.srcdirEdit.setText(c['srcdir'])
+            if 'prefix' in c:
+                self.prefixEdit.setText(c['prefix'])
+            if 'bgndimg' in c:
+                self.bgndimgEdit.setText(c['bgndimg'])
+            if 'darkimg' in c:
+                self.darkimgEdit.setText(c['darkimg'])
 
         if 'Shift' in self.conf:
             c = self.conf['Shift']
             if 'sftdir' in c:
-                self.sftdirEdit.setText(self.conf['Shift']['sftdir'])
+                self.sftdirEdit.setText(c['sftdir'])
             if 'posfn' in c:
-                self.posfnEdit.setText(self.conf['Shift']['posfn'])
+                self.posfnEdit.setText(c['posfn'])
 
     def saveConfig(self):
         fn, _ = QtGui.QFileDialog.getSaveFileName(self, caption="Save configuration", dir=self.conf['Base']['srcdir'], filter="Json file (*.json)")
-        # try:
-        f = open(fn, "w")
-        # except:
-        f.write(json.dumps(self.conf, indent=4, sort_keys=True))
+        try:
+            f = open(fn, "w")
+            f.write(json.dumps(self.conf, indent=4, sort_keys=True))
+        except IOError as e:
+            self.msgBox("IOError({0}): {1}".format(e.errno, e.strerror))
+            return
 
     def initShift(self):
-        pos, errors = read_pos_from_csv(self.conf['Shift']['posfn'], 0, 5, 6)
-        self.shiftimage = ShiftImage(self.conf['Base']['srcdir'], self.conf['Shift']['sftdir'], self.imgs, pos)
+        try:
+            pos, errors = read_pos_from_csv(self.conf['Shift']['posfn'], 0, 5, 6)
+            srcdir = self.conf['Base']['srcdir']
+            sftdir = self.conf['Shift']['sftdir']
+            self.shiftimage = ShiftImage(srcdir, sftdir, self.imgs, pos)
+        except IOError as e:
+            self.msgBox("IOError({0}): {1}".format(e.errno, e.strerror))
+            return False
+        except KeyError:
+            self.msgBox("Please check configurations")
+            return False
+
+        if not (os.path.isdir(srcdir) and os.path.isdir(sftdir)):
+            return False
+
         errlines = ','.join([str(i) for i in errors])
-        self.statusBar().showMessage('Error lines: '+errlines)
+        self.statusBar().showMessage("Position array shape is {0}, Parsing failed lines are {1}".format(pos.shape, errlines))
+        return True
 
     def plotShift(self):
+        if not self.initShift():
+            return
         interp_x, interp_y = self.shiftimage.get_interp()
         pos = self.shiftimage.get_pos()
         thetas = self.shiftimage.get_thetas()
@@ -212,19 +236,36 @@ class MainWindow(QtGui.QMainWindow):
         self.plotw.showIU()
 
     def runShift(self):
-        # copy background and dark data (To make same image file type)
+        if not self.initShift():
+            return
+        
         sftdir = self.conf['Shift']['sftdir']
-        bgndimg = self.conf['Base']['bgndimg']
 
-        tif = imread(bgndimg)
-        imwrite(os.path.join(sftdir, os.path.basename(bgndimg)), tif.to_array(), tif.get_dir())
-
-        if 'darkimg' in self.conf['Base'] and self.conf['Base']['darkimg'] != '':
+        # copy background and dark data (To make same image file type)
+        try:
+            bgndimg = self.conf['Base']['bgndimg']
             darkimg = self.conf['Base']['darkimg']
-            tif = imread(darkimg)
-            imwrite(os.path.join(sftdir, os.path.basename(darkimg)), tif.to_array(), tif.get_dir())
+        except KeyError:
+            bgndimg = ''
+            darkimg = ''
 
-        self.shiftimage.shift_all()
+        try:
+            if bgndimg != '':
+                tif = imread(bgndimg)
+                imwrite(os.path.join(sftdir, os.path.basename(bgndimg)), tif.to_array(), tif.get_dir())
+            if darkimg != '':
+                tif = imread(darkimg)
+                imwrite(os.path.join(sftdir, os.path.basename(darkimg)), tif.to_array(), tif.get_dir())
+            self.shiftimage.shift_all()
+        except IOError as e:
+            self.msgBox("IOError({0}): {1}".format(e.errno, e.strerror))
+        except ValueError:
+            self.msgBox("ValueError: " + e.message)
+
+    def msgBox(self, msg):
+        msgbox = QtGui.QMessageBox()
+        msgbox.setText(msg)
+        msgbox.exec_()
 
 class PlotWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):

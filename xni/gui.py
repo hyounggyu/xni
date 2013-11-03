@@ -21,6 +21,7 @@ from matplotlib.figure import Figure
 
 from PySide import QtGui, QtCore
 
+from normalize import Normalize
 from shift import ShiftImage
 from tiff import imread, imwrite
 from utils import find_tiff_files, read_pos_from_csv
@@ -41,6 +42,7 @@ class MainWindow(QtGui.QMainWindow):
         self.prefixLabel  = QtGui.QLabel('Image file prefix')
         self.bgndimgLabel = QtGui.QLabel('Background image file')
         self.darkimgLabel = QtGui.QLabel('Dark image file')
+        self.nordirLabel  = QtGui.QLabel('Normalized image directory')
         self.sftdirLabel  = QtGui.QLabel('Shifted image directory')
         self.posfnLabel   = QtGui.QLabel('Position data file')
 
@@ -48,16 +50,19 @@ class MainWindow(QtGui.QMainWindow):
         self.prefixEdit   = QtGui.QLineEdit()
         self.bgndimgEdit  = QtGui.QLineEdit()
         self.darkimgEdit  = QtGui.QLineEdit()
+        self.nordirEdit   = QtGui.QLineEdit()
         self.sftdirEdit   = QtGui.QLineEdit()
         self.posfnEdit    = QtGui.QLineEdit()
 
         self.srcdirBtn    = QtGui.QPushButton('Select')
         self.bgndimgBtn   = QtGui.QPushButton('Select')
         self.darkimgBtn   = QtGui.QPushButton('Select')
+        self.nordirBtn    = QtGui.QPushButton('Select')
         self.sftdirBtn    = QtGui.QPushButton('Select')
         self.posfnBtn     = QtGui.QPushButton('Select')
-        self.plotshiftBtn = QtGui.QPushButton('Plot')
-        self.runshiftBtn  = QtGui.QPushButton('Run')
+        self.runnormalBtn  = QtGui.QPushButton('Normalize All')
+        self.plotshiftBtn = QtGui.QPushButton('Plot Position')
+        self.runshiftBtn  = QtGui.QPushButton('Shift All')
 
         self.srcdirEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
         self.srcdirEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'srcdir'))
@@ -67,6 +72,8 @@ class MainWindow(QtGui.QMainWindow):
         self.bgndimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'bgndimg'))
         self.darkimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'darkimg'))
         self.darkimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'darkimg'))
+        self.nordirEdit.textChanged[str].connect(partial(self.setConfig, 'Normalize', 'nordir'))
+        self.nordirEdit.textEdited[str].connect(partial(self.setConfig, 'Normalize', 'nordir'))
         self.sftdirEdit.textChanged[str].connect(partial(self.setConfig, 'Shift', 'sftdir'))
         self.sftdirEdit.textEdited[str].connect(partial(self.setConfig, 'Shift', 'sftdir'))
         self.posfnEdit.textChanged[str].connect(partial(self.setConfig, 'Shift', 'posfn'))
@@ -75,8 +82,10 @@ class MainWindow(QtGui.QMainWindow):
         self.srcdirBtn.clicked.connect(partial(self.selectDirectory, self.srcdirEdit))
         self.bgndimgBtn.clicked.connect(partial(self.selectFile, self.bgndimgEdit, 'TIFF image File (*.tif *.tiff)'))
         self.darkimgBtn.clicked.connect(partial(self.selectFile, self.darkimgEdit, 'TIFF image File (*.tif *.tiff)'))
+        self.nordirBtn.clicked.connect(partial(self.selectDirectory, self.nordirEdit))
         self.sftdirBtn.clicked.connect(partial(self.selectDirectory, self.sftdirEdit))
         self.posfnBtn.clicked.connect(partial(self.selectFile, self.posfnEdit, 'Comma Seperated Values File (*.txt *.csv)'))
+        self.runnormalBtn.clicked.connect(self.runNormal)
         self.plotshiftBtn.clicked.connect(self.plotShift)
         self.runshiftBtn.clicked.connect(self.runShift)
 
@@ -98,19 +107,25 @@ class MainWindow(QtGui.QMainWindow):
 
         grid2 = QtGui.QGridLayout()
         grid2.setSpacing(10)
-        grid2.addWidget(self.sftdirLabel,  1, 0)
-        grid2.addWidget(self.sftdirEdit,   1, 1)
-        grid2.addWidget(self.sftdirBtn,    1, 2)
-        grid2.addWidget(self.posfnLabel,   2, 0)
-        grid2.addWidget(self.posfnEdit,    2, 1)
-        grid2.addWidget(self.posfnBtn,     2, 2)
-        group2 = QtGui.QGroupBox('Shift Configuration')
-        # Checkable?
-#        group2.setCheckable(True)
-#        group2.setChecked(False)
+        grid2.addWidget(self.nordirLabel,  1, 0)
+        grid2.addWidget(self.nordirEdit,   1, 1)
+        grid2.addWidget(self.nordirBtn,    1, 2)
+        group2 = QtGui.QGroupBox('Normalize Configuration')
         group2.setLayout(grid2)
 
+        grid3 = QtGui.QGridLayout()
+        grid3.setSpacing(10)
+        grid3.addWidget(self.sftdirLabel,  1, 0)
+        grid3.addWidget(self.sftdirEdit,   1, 1)
+        grid3.addWidget(self.sftdirBtn,    1, 2)
+        grid3.addWidget(self.posfnLabel,   2, 0)
+        grid3.addWidget(self.posfnEdit,    2, 1)
+        grid3.addWidget(self.posfnBtn,     2, 2)
+        group3 = QtGui.QGroupBox('Shift Configuration')
+        group3.setLayout(grid3)
+
         hbox1 = QtGui.QHBoxLayout()
+        hbox1.addWidget(self.runnormalBtn)
         hbox1.addWidget(self.plotshiftBtn)
         hbox1.addWidget(self.runshiftBtn)
 
@@ -119,6 +134,7 @@ class MainWindow(QtGui.QMainWindow):
         vbox.addStretch(1)
         vbox.addWidget(group1)
         vbox.addWidget(group2)
+        vbox.addWidget(group3)
         vbox.addLayout(hbox1)
         self.setCentralWidget(centralWidget)
 
@@ -183,6 +199,11 @@ class MainWindow(QtGui.QMainWindow):
             if 'darkimg' in c:
                 self.darkimgEdit.setText(c['darkimg'])
 
+        if 'Normalize' in self.conf:
+            c = self.conf['Normalize']
+            if 'nordir' in c:
+                self.sftdirEdit.setText(c['nordir'])
+
         if 'Shift' in self.conf:
             c = self.conf['Shift']
             if 'sftdir' in c:
@@ -197,6 +218,23 @@ class MainWindow(QtGui.QMainWindow):
             f.write(json.dumps(self.conf, indent=4, sort_keys=True))
         except IOError as e:
             self.msgBox("IOError({0}): {1}".format(e.errno, e.strerror))
+            return
+
+    def runNormal(self):
+        try:
+            srcdir = self.conf['Base']['srcdir']
+            nordir = self.conf['Normalize']['nordir']
+            bg = self.conf['Base']['bgndimg']
+            nor = Normalize(srcdir, nordir, self.imgs, bg)
+            nor.normalize_all()
+        except IOError as e:
+            self.msgBox("IOError({0}): {1}".format(e.errno, e.strerror))
+            return
+        except KeyError:
+            self.msgBox("Please check configurations")
+            return
+        except ValueError:
+            self.msgBox("ValueError: " + e.message)
             return
 
     def initShift(self):

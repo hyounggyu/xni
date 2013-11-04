@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    xni.config
+    xni.gui
     ~~~~~~~~~~
 
     :copyright: (c) 2013 by Hyounggyu Kim.

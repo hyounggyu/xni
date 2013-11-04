@@ -86,7 +86,7 @@ class MainWindow(QtGui.QMainWindow):
         updateView()
 
     def updateView(self):
-        self.fig.figimage(self.img, cmap=plt.gray(), imin=self.imin, imax=self.imax)
+        self.fig.figimage(self.img, cmap=plt.gray(), vmin=self.imin, vmax=self.imax)
         self.fig.canvas.draw()
 
     def msgBox(self, msg):

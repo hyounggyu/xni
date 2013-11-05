@@ -11,148 +11,152 @@ import sys, os, json
 from functools import partial
 
 import numpy as np
+from skimage import data, transform, util, exposure
 
-import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PySide'
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
+from OpenGL import GL
 
-from skimage import data, transform, util
-
-from PySide import QtGui, QtCore
+from PySide import QtGui, QtCore, QtOpenGL
 
 FIGURE_WIDTH = 700
 FIGURE_HEIGHT = 700
 SLIDER_NORMALIZED_END = 50
 
+class GLWidget(QtOpenGL.QGLWidget):
+    def __init__(self, parent=None):
+        QtOpenGL.QGLWidget.__init__(self, parent)
+
+        self.object = 0
+        self.xTrans, self.yTrans = (0, 0)
+
+        self.lastPos = QtCore.QPoint()
+
+    def minimumSizeHint(self):
+        return QtCore.QSize(50, 50)
+
+    def sizeHint(self):
+        return QtCore.QSize(400, 400)
+
+    def setXTranslation(self, position):
+        if position != self.xTrans:
+            self.xTrans = position
+            self.emit(QtCore.SIGNAL("xTranslationChanged(int)"), position)
+            self.updateGL()
+
+    def setYTranslation(self, position):
+        if position != self.yTrans:
+            self.yTrans = position
+            self.emit(QtCore.SIGNAL("yTranslationChanged(int)"), position)
+            self.updateGL()
+
+    def initializeGL(self):
+        im = data.imread('sample/sample00.tif')
+        im = exposure.rescale_intensity(im)
+        iy, ix = im.shape
+        image = np.dstack((im, im, im)).flatten().tostring()
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, GL.glGenTextures(1))
+        GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 4) # word-alignment
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB16, ix, iy, 0, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glEnable(GL.GL_TEXTURE_2D)
+
+    def paintGL(self):
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glLoadIdentity()
+        GL.glTranslate(self.xTrans, self.yTrans, 0.0)
+        GL.glScale(2.0, 2.0, 1.0)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glTexCoord(0.0, 0.0)
+        GL.glVertex  (0.0, 0.0)
+        GL.glTexCoord(1.0, 0.0)
+        GL.glVertex  (1.0, 0.0)
+        GL.glTexCoord(1.0, 1.0)
+        GL.glVertex  (1.0, 1.0)
+        GL.glTexCoord(0.0, 1.0)
+        GL.glVertex  (0.0, 1.0)
+        GL.glEnd()
+
+    def resizeGL(self, width, height):
+        side = min(width, height)
+        GL.glViewport((width - side) / 2, (height - side) / 2, side, side)
+
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+
+    def mousePressEvent(self, event):
+        self.lastPos = QtCore.QPoint(event.pos())
+
+    def mouseMoveEvent(self, event):
+        dx = event.x() - self.lastPos.x()
+        dy = event.y() - self.lastPos.y()
+
+        #if event.buttons() & QtCore.Qt.LeftButton:
+        self.setXTranslation(self.xTrans + dx/100.)
+        self.setYTranslation(self.yTrans + dy/100.)
+
+        self.lastPos = QtCore.QPoint(event.pos())
+
+
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.img = util.img_as_float(data.imread('sample/sample00.tif'))
-        self.orig_img = self.img.copy()
-        self.imax = int(self.img.max()*SLIDER_NORMALIZED_END)/float(SLIDER_NORMALIZED_END) 
-        self.imin = int(self.img.min()*SLIDER_NORMALIZED_END)/float(SLIDER_NORMALIZED_END)
-        self.scale = 1.
-        self.width, self.height = self.img.shape
-        self.xstart, self.xend = (0, FIGURE_WIDTH)
-        self.ystart, self.yend = (0, FIGURE_HEIGHT)
-        self.pressedPosition = (0,0)
         self.initUI()
 
     def initUI(self):
-        self.fig = plt.figure()
-        canvas = FigureCanvas(self.fig)
-        canvas.setFixedSize(FIGURE_WIDTH, FIGURE_HEIGHT)
-        canvas.mpl_connect('button_press_event', self.figOnPress)
-        canvas.mpl_connect('button_release_event', self.figOnRelease)
-        canvas.mpl_connect('scroll_event', self.figOnScroll)
+        glWidget = GLWidget()
 
-        imageSld = QtGui.QSlider(self)
-        imageSld.setOrientation(QtCore.Qt.Horizontal)
-        imageSld.setRange(0, 20)
-        imageSld.setSliderPosition(0)
-        imageSld.valueChanged[int].connect(self.changeImage)
+        #imageSld = QtGui.QSlider(self)
+        #imageSld.setOrientation(QtCore.Qt.Horizontal)
+        #imageSld.setRange(0, 20)
+        #imageSld.setSliderPosition(0)
+        #imageSld.valueChanged[int].connect(self.changeImage)
 
-        scaleComboBox = QtGui.QComboBox(self)
-        scaleComboBox.addItem('1')
-        scaleComboBox.addItem('2')
-        scaleComboBox.addItem('4')
-        scaleComboBox.currentIndexChanged[str].connect(self.updateScale)
+        #scaleComboBox = QtGui.QComboBox(self)
+        #scaleComboBox.addItem('1')
+        #scaleComboBox.addItem('2')
+        #scaleComboBox.addItem('4')
+        #scaleComboBox.currentIndexChanged[str].connect(self.updateScale)
 
-        iminEdit = QtGui.QLineEdit(str(self.imin))
-        imaxEdit = QtGui.QLineEdit(str(self.imax))
+        #iminEdit = QtGui.QLineEdit(str(self.imin))
+        #imaxEdit = QtGui.QLineEdit(str(self.imax))
 
-        iminSld = QtGui.QSlider(self)
-        iminSld.setOrientation(QtCore.Qt.Horizontal)
-        iminSld.setRange(0, SLIDER_NORMALIZED_END)
-        iminSld.setSliderPosition(int(self.imin*SLIDER_NORMALIZED_END))
-        iminSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMIN', iminEdit))
+        #iminSld = QtGui.QSlider(self)
+        #iminSld.setOrientation(QtCore.Qt.Horizontal)
+        #iminSld.setRange(0, SLIDER_NORMALIZED_END)
+        #iminSld.setSliderPosition(int(self.imin*SLIDER_NORMALIZED_END))
+        #iminSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMIN', iminEdit))
 
-        imaxSld = QtGui.QSlider(self)
-        imaxSld.setOrientation(QtCore.Qt.Horizontal)
-        imaxSld.setRange(0, SLIDER_NORMALIZED_END)
-        imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
-        imaxSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMAX', imaxEdit))
+        #imaxSld = QtGui.QSlider(self)
+        #imaxSld.setOrientation(QtCore.Qt.Horizontal)
+        #imaxSld.setRange(0, SLIDER_NORMALIZED_END)
+        #imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
+        #imaxSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMAX', imaxEdit))
 
-        vbox = QtGui.QVBoxLayout()
-        vbox.addWidget(imageSld)
-        vbox.addWidget(scaleComboBox)
-        vbox.addWidget(iminEdit)
-        vbox.addWidget(iminSld)
-        vbox.addWidget(imaxEdit)
-        vbox.addWidget(imaxSld)
+        #vbox = QtGui.QVBoxLayout()
+        #vbox.addWidget(imageSld)
+        #vbox.addWidget(scaleComboBox)
+        #vbox.addWidget(iminEdit)
+        #vbox.addWidget(iminSld)
+        #vbox.addWidget(imaxEdit)
+        #vbox.addWidget(imaxSld)
 
         centralWidget = QtGui.QWidget(self)
-        hbox = QtGui.QHBoxLayout(centralWidget)
-        hbox.addWidget(canvas)
-        hbox.addLayout(vbox)
-        self.setCentralWidget(centralWidget)
+        #hbox = QtGui.QHBoxLayout(centralWidget)
+        #hbox.addWidget(glWidget)
+        #hbox.addLayout(vbox)
+        #self.setCentralWidget(centralWidget)
+        self.setCentralWidget(glWidget)
 
         self.resize(1000,800)
-
-        self.figDraw()
-
-    def updateIntensity(self, tag, widget, value):
-        value = value / float(SLIDER_NORMALIZED_END)
-        if tag == 'IMAX':
-            self.imax = value
-        elif tag == 'IMIN':
-            self.imin = value
-        widget.setText(str(value))
-        self.figDraw()
-
-    def updateScale(self, tag):
-        self.scale = float(tag)
-        self.img = transform.rescale(self.orig_img, self.scale)
-        self.width, self.height = self.img.shape
-        self.figDraw()
 
     def msgBox(self, msg):
         msgbox = QtGui.QMessageBox()
         msgbox.setText(msg)
         msgbox.exec_()
-
-    def figDraw(self):
-        self.fig.figimage(self.img[self.ystart:self.yend,self.xstart:self.xend], cmap=plt.gray(), vmin=self.imin, vmax=self.imax)
-        self.fig.canvas.draw()
-
-    def figOnPress(self, event):
-        self.pressedPosition = (int(event.x), int(event.y)) # why y is float?
-
-    def figOnRelease(self, event):
-        posnewx, posnewy = (int(event.x), int(event.y))
-        posoldx, posoldy = self.pressedPosition
-        dx = posnewx - posoldx
-        dy = posnewy - posoldy
-        if (dx, dy) != 0:
-            self.moveImage(dx,dy)
-            self.figDraw()
-
-    def figOnScroll(self, event):
-        pass
-
-    def moveImage(self, dx, dy):
-        self.xstart, self.xend = (self.xstart - dx, self.xend - dx)
-        if self.xstart < 0:
-            self.xstart, self.xend = (0, FIGURE_WIDTH)
-        elif self.xend > self.width:
-            self.xstart, self.xend = (self.width - FIGURE_WIDTH, self.width)
-
-        self.ystart, self.yend = (self.ystart + dy, self.yend + dy)
-        if self.ystart < 0:
-            self.ystart, self.yend = (0, FIGURE_HEIGHT)
-        elif self.yend > self.height:
-            self.ystart, self.yend = (self.height - FIGURE_WIDTH, self.height)
-
-    def changeImage(self, value):
-        imgfilename = 'sample/sample%02d.tif' % value
-        self.orig_img = util.img_as_float(data.imread(imgfilename))
-        self.img = transform.rescale(self.orig_img, self.scale)
-        self.width, self.height = self.img.shape
-        self.figDraw()
 
 class App(QtGui.QApplication):
     def __init__(self, *argv):

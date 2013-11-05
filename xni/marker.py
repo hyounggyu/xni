@@ -23,26 +23,29 @@ from skimage import data, transform, util
 
 from PySide import QtGui, QtCore
 
+FIGURE_WIDTH = 700
+FIGURE_HEIGHT = 700
+SLIDER_NORMALIZED_END = 50
+
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.img = util.img_as_float(data.imread('sample.tif'))
         self.orig_img = self.img.copy()
-        # is 8 bit or 16 bit?
-        self.imax = int(self.img.max()*50)/50. # 0.02 씩 
-        self.imin = int(self.img.min()*50)/50. # 0.02 씩
+        self.imax = int(self.img.max()*SLIDER_NORMALIZED_END)/float(SLIDER_NORMALIZED_END) 
+        self.imin = int(self.img.min()*SLIDER_NORMALIZED_END)/float(SLIDER_NORMALIZED_END)
         self.scale = 1.
         self.width, self.height = self.img.shape
-        self.xmin = 0
-        self.ymax = self.height
+        self.xstart, self.xend = (0, FIGURE_WIDTH)
+        self.ystart, self.yend = (0, FIGURE_HEIGHT)
         self.pressedPosition = (0,0)
         self.initUI()
 
     def initUI(self):
         self.fig = plt.figure()
         canvas = FigureCanvas(self.fig)
-        canvas.setFixedSize(700,700)
+        canvas.setFixedSize(FIGURE_WIDTH, FIGURE_HEIGHT)
         canvas.mpl_connect('button_press_event', self.figOnPress)
         canvas.mpl_connect('button_release_event', self.figOnRelease)
         canvas.mpl_connect('scroll_event', self.figOnScroll)
@@ -52,14 +55,14 @@ class MainWindow(QtGui.QMainWindow):
 
         iminSld = QtGui.QSlider(self)
         iminSld.setOrientation(QtCore.Qt.Horizontal)
-        iminSld.setRange(0, 50) # test range
-        iminSld.setSliderPosition(int(self.imin*50)) # float to int
+        iminSld.setRange(0, SLIDER_NORMALIZED_END)
+        iminSld.setSliderPosition(int(self.imin*SLIDER_NORMALIZED_END))
         iminSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMIN', iminEdit))
 
         imaxSld = QtGui.QSlider(self)
         imaxSld.setOrientation(QtCore.Qt.Horizontal)
-        imaxSld.setRange(0, 50) # test range
-        imaxSld.setSliderPosition(int(self.imax*50)) # float to int
+        imaxSld.setRange(0, SLIDER_NORMALIZED_END)
+        imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
         imaxSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMAX', imaxEdit))
 
         vbox = QtGui.QVBoxLayout()
@@ -76,29 +79,29 @@ class MainWindow(QtGui.QMainWindow):
 
         self.resize(1000,800)
 
-        self.updateView()
+        self.figDraw()
 
     def updateIntensity(self, tag, widget, value):
-        value = value / 50. # test range
+        value = value / float(SLIDER_NORMALIZED_END)
         if tag == 'IMAX':
             self.imax = value
         elif tag == 'IMIN':
             self.imin = value
         widget.setText(str(value))
-        self.updateView()
+        self.figDraw()
 
     def updateScale(self):
         self.img = transform.rescale(self.orig_img, self.scale)
-        updateView()
-
-    def updateView(self):
-        self.fig.figimage(self.img[:self.ymax,self.xmin:], cmap=plt.gray(), vmin=self.imin, vmax=self.imax)
-        self.fig.canvas.draw()
+        self.figDraw()
 
     def msgBox(self, msg):
         msgbox = QtGui.QMessageBox()
         msgbox.setText(msg)
         msgbox.exec_()
+
+    def figDraw(self):
+        self.fig.figimage(self.img[self.ystart:self.yend,self.xstart:self.xend], cmap=plt.gray(), vmin=self.imin, vmax=self.imax)
+        self.fig.canvas.draw()
 
     def figOnPress(self, event):
         self.pressedPosition = (int(event.x), int(event.y)) # why y is float?
@@ -108,9 +111,9 @@ class MainWindow(QtGui.QMainWindow):
         oldposx, oldposy = self.pressedPosition
         dx = oldposx - posx
         dy = oldposy - posy        
-        self.xmin = self.xmin + dx
-        self.ymax = self.ymax - dy
-        self.updateView()
+        self.xstart = self.xstart + dx
+        self.yend = self.yend - dy
+        self.figDraw()
 
     def figOnScroll(self, event):
         pass

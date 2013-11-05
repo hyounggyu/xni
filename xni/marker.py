@@ -31,7 +31,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.img = util.img_as_float(data.imread('sample.tif'))
+        self.img = util.img_as_float(data.imread('sample/sample00.tif'))
         self.orig_img = self.img.copy()
         self.imax = int(self.img.max()*SLIDER_NORMALIZED_END)/float(SLIDER_NORMALIZED_END) 
         self.imin = int(self.img.min()*SLIDER_NORMALIZED_END)/float(SLIDER_NORMALIZED_END)
@@ -50,6 +50,18 @@ class MainWindow(QtGui.QMainWindow):
         canvas.mpl_connect('button_release_event', self.figOnRelease)
         canvas.mpl_connect('scroll_event', self.figOnScroll)
 
+        imageSld = QtGui.QSlider(self)
+        imageSld.setOrientation(QtCore.Qt.Horizontal)
+        imageSld.setRange(0, 20)
+        imageSld.setSliderPosition(0)
+        imageSld.valueChanged[int].connect(self.changeImage)
+
+        scaleComboBox = QtGui.QComboBox(self)
+        scaleComboBox.addItem('1')
+        scaleComboBox.addItem('2')
+        scaleComboBox.addItem('4')
+        scaleComboBox.currentIndexChanged[str].connect(self.updateScale)
+
         iminEdit = QtGui.QLineEdit(str(self.imin))
         imaxEdit = QtGui.QLineEdit(str(self.imax))
 
@@ -66,6 +78,8 @@ class MainWindow(QtGui.QMainWindow):
         imaxSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMAX', imaxEdit))
 
         vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(imageSld)
+        vbox.addWidget(scaleComboBox)
         vbox.addWidget(iminEdit)
         vbox.addWidget(iminSld)
         vbox.addWidget(imaxEdit)
@@ -90,8 +104,10 @@ class MainWindow(QtGui.QMainWindow):
         widget.setText(str(value))
         self.figDraw()
 
-    def updateScale(self):
+    def updateScale(self, tag):
+        self.scale = float(tag)
         self.img = transform.rescale(self.orig_img, self.scale)
+        self.width, self.height = self.img.shape
         self.figDraw()
 
     def msgBox(self, msg):
@@ -107,16 +123,36 @@ class MainWindow(QtGui.QMainWindow):
         self.pressedPosition = (int(event.x), int(event.y)) # why y is float?
 
     def figOnRelease(self, event):
-        posx, posy = (int(event.x), int(event.y))
-        oldposx, oldposy = self.pressedPosition
-        dx = oldposx - posx
-        dy = oldposy - posy        
-        self.xstart = self.xstart + dx
-        self.yend = self.yend - dy
-        self.figDraw()
+        posnewx, posnewy = (int(event.x), int(event.y))
+        posoldx, posoldy = self.pressedPosition
+        dx = posnewx - posoldx
+        dy = posnewy - posoldy
+        if (dx, dy) != 0:
+            self.moveImage(dx,dy)
+            self.figDraw()
 
     def figOnScroll(self, event):
         pass
+
+    def moveImage(self, dx, dy):
+        self.xstart, self.xend = (self.xstart - dx, self.xend - dx)
+        if self.xstart < 0:
+            self.xstart, self.xend = (0, FIGURE_WIDTH)
+        elif self.xend > self.width:
+            self.xstart, self.xend = (self.width - FIGURE_WIDTH, self.width)
+
+        self.ystart, self.yend = (self.ystart + dy, self.yend + dy)
+        if self.ystart < 0:
+            self.ystart, self.yend = (0, FIGURE_HEIGHT)
+        elif self.yend > self.height:
+            self.ystart, self.yend = (self.height - FIGURE_WIDTH, self.height)
+
+    def changeImage(self, value):
+        imgfilename = 'sample/sample%02d.tif' % value
+        self.orig_img = util.img_as_float(data.imread(imgfilename))
+        self.img = transform.rescale(self.orig_img, self.scale)
+        self.width, self.height = self.img.shape
+        self.figDraw()
 
 class App(QtGui.QApplication):
     def __init__(self, *argv):

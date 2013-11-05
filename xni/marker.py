@@ -34,12 +34,18 @@ class MainWindow(QtGui.QMainWindow):
         self.imin = int(self.img.min()*50)/50. # 0.02 씩
         self.scale = 1.
         self.width, self.height = self.img.shape
+        self.xmin = 0
+        self.ymax = self.height
+        self.pressedPosition = (0,0)
         self.initUI()
 
     def initUI(self):
         self.fig = plt.figure()
         canvas = FigureCanvas(self.fig)
         canvas.setFixedSize(700,700)
+        canvas.mpl_connect('button_press_event', self.figOnPress)
+        canvas.mpl_connect('button_release_event', self.figOnRelease)
+        canvas.mpl_connect('scroll_event', self.figOnScroll)
 
         iminEdit = QtGui.QLineEdit(str(self.imin))
         imaxEdit = QtGui.QLineEdit(str(self.imax))
@@ -86,13 +92,28 @@ class MainWindow(QtGui.QMainWindow):
         updateView()
 
     def updateView(self):
-        self.fig.figimage(self.img, cmap=plt.gray(), vmin=self.imin, vmax=self.imax)
+        self.fig.figimage(self.img[:self.ymax,self.xmin:], cmap=plt.gray(), vmin=self.imin, vmax=self.imax)
         self.fig.canvas.draw()
 
     def msgBox(self, msg):
         msgbox = QtGui.QMessageBox()
         msgbox.setText(msg)
         msgbox.exec_()
+
+    def figOnPress(self, event):
+        self.pressedPosition = (int(event.x), int(event.y)) # why y is float?
+
+    def figOnRelease(self, event):
+        posx, posy = (int(event.x), int(event.y))
+        oldposx, oldposy = self.pressedPosition
+        dx = oldposx - posx
+        dy = oldposy - posy        
+        self.xmin = self.xmin + dx
+        self.ymax = self.ymax - dy
+        self.updateView()
+
+    def figOnScroll(self, event):
+        pass
 
 class App(QtGui.QApplication):
     def __init__(self, *argv):

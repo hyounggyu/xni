@@ -11,7 +11,7 @@ import sys, os, json
 from functools import partial
 
 import numpy as np
-from skimage import data, transform, util, exposure
+from skimage import io, transform, util, exposure
 
 from OpenGL import GL
 
@@ -22,10 +22,10 @@ FIGURE_HEIGHT = 700
 SLIDER_NORMALIZED_END = 50
 
 class GLWidget(QtOpenGL.QGLWidget):
-    def __init__(self, parent=None):
+    def __init__(self, ix, iy, image, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
 
-        self.object = 0
+        self.ix, self.iy, self.image = (ix, iy, image)
         self.xTrans, self.yTrans = (0, 0)
 
         self.lastPos = QtCore.QPoint()
@@ -48,22 +48,25 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.emit(QtCore.SIGNAL("yTranslationChanged(int)"), position)
             self.updateGL()
 
-    def initializeGL(self):
-        im = data.imread('sample/sample00.tif')
-        im = exposure.rescale_intensity(im)
-        iy, ix = im.shape
-        image = np.dstack((im, im, im)).flatten().tostring()
+    def loadTexture(self, image):
+        GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.ix, self.iy, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
+        self.updateGL()
 
+    def initializeGL(self):
+        # 아래 코드 테스트 할 것
+        GL.glEnable(GL.GL_TEXTURE_2D)
         GL.glBindTexture(GL.GL_TEXTURE_2D, GL.glGenTextures(1))
         GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 4) # word-alignment
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB16, ix, iy, 0, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-        GL.glEnable(GL.GL_TEXTURE_2D)
+        GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT) # 무슨 뜻?
+        GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT) # 무슨 뜻?
+        GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB16, self.ix, self.iy, 0, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, self.image)
 
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
+        #GL.glColor(2.0, 2.0, 2.0)
         GL.glTranslate(self.xTrans, self.yTrans, 0.0)
         GL.glScale(2.0, 2.0, 1.0)
         GL.glBegin(GL.GL_QUADS)
@@ -99,59 +102,84 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         self.lastPos = QtCore.QPoint(event.pos())
 
-
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+
+        self.idx = 0
+        self.imin, self.imax = (0, 1)
+
+        self.loadImages()
         self.initUI()
 
     def initUI(self):
-        glWidget = GLWidget()
+        self.glWidget = GLWidget(self.ix, self.iy, self.image)
+        self.glWidget.setFixedSize(FIGURE_WIDTH, FIGURE_HEIGHT)
 
-        #imageSld = QtGui.QSlider(self)
-        #imageSld.setOrientation(QtCore.Qt.Horizontal)
-        #imageSld.setRange(0, 20)
-        #imageSld.setSliderPosition(0)
-        #imageSld.valueChanged[int].connect(self.changeImage)
+        imageSld = QtGui.QSlider(self)
+        imageSld.setOrientation(QtCore.Qt.Horizontal)
+        imageSld.setRange(0, 20)
+        imageSld.setSliderPosition(0)
+        imageSld.valueChanged[int].connect(self.changeIndex)
 
-        #scaleComboBox = QtGui.QComboBox(self)
-        #scaleComboBox.addItem('1')
-        #scaleComboBox.addItem('2')
-        #scaleComboBox.addItem('4')
-        #scaleComboBox.currentIndexChanged[str].connect(self.updateScale)
+        iminEdit = QtGui.QLineEdit(str(self.imin))
+        imaxEdit = QtGui.QLineEdit(str(self.imax))
 
-        #iminEdit = QtGui.QLineEdit(str(self.imin))
-        #imaxEdit = QtGui.QLineEdit(str(self.imax))
+        iminSld = QtGui.QSlider(self)
+        iminSld.setOrientation(QtCore.Qt.Horizontal)
+        iminSld.setRange(0, SLIDER_NORMALIZED_END)
+        iminSld.setSliderPosition(int(self.imin*SLIDER_NORMALIZED_END))
+        iminSld.valueChanged[int].connect(partial(self.changeIntensity, 'IMIN', iminEdit))
 
-        #iminSld = QtGui.QSlider(self)
-        #iminSld.setOrientation(QtCore.Qt.Horizontal)
-        #iminSld.setRange(0, SLIDER_NORMALIZED_END)
-        #iminSld.setSliderPosition(int(self.imin*SLIDER_NORMALIZED_END))
-        #iminSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMIN', iminEdit))
+        imaxSld = QtGui.QSlider(self)
+        imaxSld.setOrientation(QtCore.Qt.Horizontal)
+        imaxSld.setRange(0, SLIDER_NORMALIZED_END)
+        imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
+        imaxSld.valueChanged[int].connect(partial(self.changeIntensity, 'IMAX', imaxEdit))
 
-        #imaxSld = QtGui.QSlider(self)
-        #imaxSld.setOrientation(QtCore.Qt.Horizontal)
-        #imaxSld.setRange(0, SLIDER_NORMALIZED_END)
-        #imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
-        #imaxSld.valueChanged[int].connect(partial(self.updateIntensity, 'IMAX', imaxEdit))
-
-        #vbox = QtGui.QVBoxLayout()
-        #vbox.addWidget(imageSld)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(imageSld)
         #vbox.addWidget(scaleComboBox)
-        #vbox.addWidget(iminEdit)
-        #vbox.addWidget(iminSld)
-        #vbox.addWidget(imaxEdit)
-        #vbox.addWidget(imaxSld)
+        vbox.addWidget(iminEdit)
+        vbox.addWidget(iminSld)
+        vbox.addWidget(imaxEdit)
+        vbox.addWidget(imaxSld)
 
         centralWidget = QtGui.QWidget(self)
-        #hbox = QtGui.QHBoxLayout(centralWidget)
-        #hbox.addWidget(glWidget)
-        #hbox.addLayout(vbox)
-        #self.setCentralWidget(centralWidget)
-        self.setCentralWidget(glWidget)
+        hbox = QtGui.QHBoxLayout(centralWidget)
+        hbox.addWidget(self.glWidget)
+        hbox.addLayout(vbox)
+        self.setCentralWidget(centralWidget)
 
         self.resize(1000,800)
+
+    def loadImages(self):
+        self.imgs = io.ImageCollection('sample/sample*.tif')
+        im = self.imgs[0]
+        self.iy, self.ix = im.shape
+        self.image = np.dstack((im, im, im)).flatten().tostring()
+
+    def changeIndex(self, idx):
+        self.idx = idx
+        self.drawImage()
+
+    def changeIntensity(self, tag, widget, value):
+        value = value / float(SLIDER_NORMALIZED_END)
+        if tag == 'IMAX':
+            self.imax = value
+        elif tag == 'IMIN':
+            self.imin = value
+        self.drawImage()
+
+    def drawImage(self):
+        im = self.imgs[self.idx]
+        #imin = util.dtype.dtype_range[im.dtype][0] * self.imin
+        #imax = util.dtype.dtype_range[im.dtype][1] * self.imin
+        imin = self.imin * (256*256-1)
+        imax = self.imax * (256*256-1)
+        im = exposure.rescale_intensity(im, (imin, imax))
+        self.glWidget.loadTexture(np.dstack((im, im, im)).flatten().tostring())
 
     def msgBox(self, msg):
         msgbox = QtGui.QMessageBox()

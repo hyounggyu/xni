@@ -27,6 +27,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         self.ix, self.iy, self.image = (ix, iy, image)
         self.xTrans, self.yTrans = (0, 0)
+        self.scale = 1.0
 
         self.lastPos = QtCore.QPoint()
 
@@ -53,7 +54,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def initializeGL(self):
-        # 아래 코드 테스트 할 것
         GL.glEnable(GL.GL_TEXTURE_2D)
         GL.glBindTexture(GL.GL_TEXTURE_2D, GL.glGenTextures(1))
         GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 4) # word-alignment
@@ -66,9 +66,8 @@ class GLWidget(QtOpenGL.QGLWidget):
     def paintGL(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
-        #GL.glColor(2.0, 2.0, 2.0)
         GL.glTranslate(self.xTrans, self.yTrans, 0.0)
-        GL.glScale(2.0, 2.0, 1.0)
+        GL.glScale(self.scale, self.scale, 1.0)
         GL.glBegin(GL.GL_QUADS)
         GL.glTexCoord(0.0, 0.0)
         GL.glVertex  (0.0, 0.0)
@@ -97,10 +96,14 @@ class GLWidget(QtOpenGL.QGLWidget):
         dy = event.y() - self.lastPos.y()
 
         #if event.buttons() & QtCore.Qt.LeftButton:
-        self.setXTranslation(self.xTrans + dx/100.)
-        self.setYTranslation(self.yTrans + dy/100.)
+        self.setXTranslation(self.xTrans + dx/100.) # image move speed
+        self.setYTranslation(self.yTrans + dy/100.) # image move speed
 
         self.lastPos = QtCore.QPoint(event.pos())
+
+    def wheelEvent(self, event):
+        self.scale += event.delta() / 100.
+        self.updateGL()
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -140,7 +143,6 @@ class MainWindow(QtGui.QMainWindow):
 
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(imageSld)
-        #vbox.addWidget(scaleComboBox)
         vbox.addWidget(iminEdit)
         vbox.addWidget(iminSld)
         vbox.addWidget(imaxEdit)
@@ -174,8 +176,8 @@ class MainWindow(QtGui.QMainWindow):
 
     def drawImage(self):
         im = self.imgs[self.idx]
-        #imin = util.dtype.dtype_range[im.dtype][0] * self.imin
-        #imax = util.dtype.dtype_range[im.dtype][1] * self.imin
+        #imin = util.dtype.dtype_range[im.dtype][0] * self.imin # KeyError uint16
+        #imax = util.dtype.dtype_range[im.dtype][1] * self.imin # KeyError uint16
         imin = self.imin * (256*256-1)
         imax = self.imax * (256*256-1)
         im = exposure.rescale_intensity(im, (imin, imax))

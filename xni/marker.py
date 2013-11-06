@@ -7,14 +7,14 @@
     :license: GPL, see LICENSE for more details.
 """
 
-import sys, os, json
+import sys
+import math
 from functools import partial
 
 import numpy as np
 from skimage import io, transform, util, exposure
 
 from OpenGL import GL
-
 from PySide import QtGui, QtCore, QtOpenGL
 
 FIGURE_WIDTH = 700
@@ -26,28 +26,32 @@ class GLWidget(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent)
 
         self.ix, self.iy, self.image = (ix, iy, image)
-        self.xTrans, self.yTrans = (0, 0)
+        self.normix, self.normiy = (1.0, float(ix)/float(iy))
+        self.ortho = 1.0
         self.scale = 1.0
+        self.xTrans = 0.0
+        self.yTrans = 0.0
 
         self.lastPos = QtCore.QPoint()
 
-    def minimumSizeHint(self):
-        return QtCore.QSize(50, 50)
+    def setTranslation(self, dx, dy):
+        self.xTrans = self.normalizeTranslation(self.normix, self.xTrans+dx) # normix to normimwidth
+        self.yTrans = self.normalizeTranslation(self.normiy, self.yTrans+dy)
+        self.updateGL()
 
-    def sizeHint(self):
-        return QtCore.QSize(400, 400)
-
-    def setXTranslation(self, position):
-        if position != self.xTrans:
-            self.xTrans = position
-            self.emit(QtCore.SIGNAL("xTranslationChanged(int)"), position)
-            self.updateGL()
-
-    def setYTranslation(self, position):
-        if position != self.yTrans:
-            self.yTrans = position
-            self.emit(QtCore.SIGNAL("yTranslationChanged(int)"), position)
-            self.updateGL()
+    def setScale(self, normx, normy, delta):
+        oldscale = self.scale
+        newscale = self.scale + delta
+        if newscale > 1.0:
+            self.xTrans = normx - newscale*(normx-self.xTrans)/oldscale
+            self.yTrans = normy - newscale*(normy-self.yTrans)/oldscale
+            self.xTrans = self.normalizeTranslation(self.normix, self.xTrans) # normix to normimwidth
+            self.yTrans = self.normalizeTranslation(self.normiy, self.yTrans)
+        else:
+            newscale = 1.0
+            self.xTrans, self.yTrans = (0, 0)
+        self.scale = newscale
+        self.updateGL()
 
     def loadTexture(self, image):
         GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.ix, self.iy, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
@@ -69,14 +73,14 @@ class GLWidget(QtOpenGL.QGLWidget):
         GL.glTranslate(self.xTrans, self.yTrans, 0.0)
         GL.glScale(self.scale, self.scale, 1.0)
         GL.glBegin(GL.GL_QUADS)
-        GL.glTexCoord(0.0, 0.0)
-        GL.glVertex  (0.0, 0.0)
-        GL.glTexCoord(1.0, 0.0)
-        GL.glVertex  (1.0, 0.0)
-        GL.glTexCoord(1.0, 1.0)
-        GL.glVertex  (1.0, 1.0)
-        GL.glTexCoord(0.0, 1.0)
-        GL.glVertex  (0.0, 1.0)
+        GL.glTexCoord(        0.0,         0.0)  # texture coordinate?
+        GL.glVertex  (        0.0,         0.0)
+        GL.glTexCoord(        1.0,         0.0)  # texture coordinate?
+        GL.glVertex  (self.normix,         0.0)
+        GL.glTexCoord(        1.0,         1.0)  # texture coordinate?
+        GL.glVertex  (self.normix, self.normiy)
+        GL.glTexCoord(        0.0,         1.0)  # texture coordinate?
+        GL.glVertex  (        0.0, self.normiy)
         GL.glEnd()
 
     def resizeGL(self, width, height):
@@ -96,14 +100,24 @@ class GLWidget(QtOpenGL.QGLWidget):
         dy = event.y() - self.lastPos.y()
 
         #if event.buttons() & QtCore.Qt.LeftButton:
-        self.setXTranslation(self.xTrans + dx/100.) # image move speed
-        self.setYTranslation(self.yTrans + dy/100.) # image move speed
+        self.setTranslation(dx/200., dy/200.) # translation speed is 1/200.
 
         self.lastPos = QtCore.QPoint(event.pos())
 
     def wheelEvent(self, event):
-        self.scale += event.delta() / 100.
-        self.updateGL()
+        normx = float(event.x()) / self.size().width()
+        normy = 1. - (float(event.y()) / self.size().height())
+        delta = event.delta() / 100. # scale speed is 1/100.
+        self.setScale(normx, normy, delta)
+
+    def normalizeTranslation(self, normimsize, new):
+        transmin = -self.scale * normimsize + self.ortho
+        transmax = 0.0
+        if new > transmax:
+            new = transmax
+        elif new < transmin:
+            new = transmin
+        return new
 
 class MainWindow(QtGui.QMainWindow):
 

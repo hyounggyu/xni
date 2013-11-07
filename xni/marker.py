@@ -35,18 +35,20 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.lastPos = QtCore.QPoint()
 
     def setTranslation(self, dx, dy):
-        self.xTrans = self.normalizeTranslation(self.normix, self.xTrans+dx) # normix to normimwidth
-        self.yTrans = self.normalizeTranslation(self.normiy, self.yTrans+dy)
+        self.xTrans = self.normalizeTranslation(self.normix*self.scale, self.xTrans+dx) # normix to normimwidth
+        self.yTrans = self.normalizeTranslation(self.normiy*self.scale, self.yTrans+dy)
         self.updateGL()
 
     def setScale(self, normx, normy, delta):
         oldscale = self.scale
         newscale = self.scale + delta
         if newscale > 1.0:
+            print self.xTrans
             self.xTrans = normx - newscale*(normx-self.xTrans)/oldscale
+            print self.xTrans, normx, newscale, oldscale
             self.yTrans = normy - newscale*(normy-self.yTrans)/oldscale
-            self.xTrans = self.normalizeTranslation(self.normix, self.xTrans) # normix to normimwidth
-            self.yTrans = self.normalizeTranslation(self.normiy, self.yTrans)
+            self.xTrans = self.normalizeTranslation(self.normix*newscale, self.xTrans) # normix to normimwidth
+            self.yTrans = self.normalizeTranslation(self.normiy*newscale, self.yTrans)
         else:
             newscale = 1.0
             self.xTrans, self.yTrans = (0, 0)
@@ -107,11 +109,11 @@ class GLWidget(QtOpenGL.QGLWidget):
     def wheelEvent(self, event):
         normx = float(event.x()) / self.size().width()
         normy = 1. - (float(event.y()) / self.size().height())
-        delta = event.delta() / 100. # scale speed is 1/100.
+        delta = event.delta() / 200. # scale speed
         self.setScale(normx, normy, delta)
 
-    def normalizeTranslation(self, normimsize, new):
-        transmin = -self.scale * normimsize + self.ortho
+    def normalizeTranslation(self, imsize, new):
+        transmin = -imsize + self.ortho
         transmax = 0.0
         if new > transmax:
             new = transmax

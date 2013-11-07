@@ -21,9 +21,16 @@ FIGURE_WIDTH = 700
 FIGURE_HEIGHT = 700
 SLIDER_NORMALIZED_END = 50
 
+class Communicate(QtCore.QObject):
+
+    xmarkerChanged = QtCore.Signal(int)
+    ymarkerChanged = QtCore.Signal(int)
+
 class GLWidget(QtOpenGL.QGLWidget):
     def __init__(self, ix, iy, image, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
+
+        self.signal = Communicate()
 
         self.ix, self.iy, self.image = (ix, iy, image)
         self.normix, self.normiy = (1.0, float(ix)/float(iy))
@@ -43,9 +50,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         oldscale = self.scale
         newscale = self.scale + delta
         if newscale > 1.0:
-            print self.xTrans
             self.xTrans = normx - newscale*(normx-self.xTrans)/oldscale
-            print self.xTrans, normx, newscale, oldscale
             self.yTrans = normy - newscale*(normy-self.yTrans)/oldscale
             self.xTrans = self.normalizeTranslation(self.normix*newscale, self.xTrans) # normix to normimwidth
             self.yTrans = self.normalizeTranslation(self.normiy*newscale, self.yTrans)
@@ -97,6 +102,9 @@ class GLWidget(QtOpenGL.QGLWidget):
     def mousePressEvent(self, event):
         self.lastPos = QtCore.QPoint(event.pos())
 
+        self.signal.xmarkerChanged.emit(event.x())
+        self.signal.ymarkerChanged.emit(event.y())
+
     def mouseMoveEvent(self, event):
         dx = event.x() - self.lastPos.x()
         dy = event.y() - self.lastPos.y()
@@ -135,12 +143,17 @@ class MainWindow(QtGui.QMainWindow):
     def initUI(self):
         self.glWidget = GLWidget(self.ix, self.iy, self.image)
         self.glWidget.setFixedSize(FIGURE_WIDTH, FIGURE_HEIGHT)
+        self.glWidget.signal.xmarkerChanged.connect(self.xmarkerChanged)
+        self.glWidget.signal.ymarkerChanged.connect(self.ymarkerChanged)
 
         imageSld = QtGui.QSlider(self)
         imageSld.setOrientation(QtCore.Qt.Horizontal)
         imageSld.setRange(0, 20)
         imageSld.setSliderPosition(0)
         imageSld.valueChanged[int].connect(self.changeIndex)
+
+        self.xmarkerLabel = QtGui.QLabel('0')
+        self.ymarkerLabel = QtGui.QLabel('0')
 
         iminEdit = QtGui.QLineEdit(str(self.imin))
         imaxEdit = QtGui.QLineEdit(str(self.imax))
@@ -163,6 +176,8 @@ class MainWindow(QtGui.QMainWindow):
         vbox.addWidget(iminSld)
         vbox.addWidget(imaxEdit)
         vbox.addWidget(imaxSld)
+        vbox.addWidget(self.xmarkerLabel)
+        vbox.addWidget(self.ymarkerLabel)
 
         centralWidget = QtGui.QWidget(self)
         hbox = QtGui.QHBoxLayout(centralWidget)
@@ -177,6 +192,12 @@ class MainWindow(QtGui.QMainWindow):
         im = self.imgs[0]
         self.iy, self.ix = im.shape
         self.image = np.dstack((im, im, im)).flatten().tostring()
+
+    def xmarkerChanged(self, pos):
+        self.xmarkerLabel.setText(str(pos))
+
+    def ymarkerChanged(self, pos):
+        self.ymarkerLabel.setText(str(pos))
 
     def changeIndex(self, idx):
         self.idx = idx

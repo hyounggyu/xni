@@ -11,7 +11,8 @@ import os
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.ndimage.interpolation import shift
-from tiff import imread, imwrite
+#from tiff import imread, imwrite
+from skimage import io
 
 class ShiftImage:
     def __init__(self, srcdir, tgtdir, fns, pos):
@@ -34,9 +35,9 @@ class ShiftImage:
 
     def shift_all(self):
         for fn, theta in zip(self.fns, self.thetas):
-            tif = imread(os.path.join(self.srcdir, fn))
-            img = self.shift_img(tif.to_array(), theta)
-            imwrite(os.path.join(self.tgtdir, fn), img, tif.get_dir())
+            im = io.imread(os.path.join(self.srcdir, fn))
+            im = self.shift_img(im, theta)
+            io.imsave(os.path.join(self.tgtdir, fn), im)
 
     def get_pos(self):
         return self.pos

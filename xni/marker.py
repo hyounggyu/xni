@@ -152,8 +152,10 @@ class MainWindow(QtGui.QMainWindow):
         imageSld.setSliderPosition(0)
         imageSld.valueChanged[int].connect(self.changeIndex)
 
-        self.xmarkerLabel = QtGui.QLabel('0')
-        self.ymarkerLabel = QtGui.QLabel('0')
+        xmarkerLabel     = QtGui.QLabel('x')
+        ymarkerLabel     = QtGui.QLabel('y')
+        self.xmarkerEdit = QtGui.QLineEdit('0')
+        self.ymarkerEdit = QtGui.QLineEdit('0')
 
         iminEdit = QtGui.QLineEdit(str(self.imin))
         imaxEdit = QtGui.QLineEdit(str(self.imax))
@@ -170,14 +172,19 @@ class MainWindow(QtGui.QMainWindow):
         imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
         imaxSld.valueChanged[int].connect(partial(self.changeIntensity, 'IMAX', imaxEdit))
 
+        hbox1 = QtGui.QHBoxLayout()
+        hbox1.addWidget(xmarkerLabel)
+        hbox1.addWidget(self.xmarkerEdit)
+        hbox1.addWidget(ymarkerLabel)
+        hbox1.addWidget(self.ymarkerEdit)
+
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(imageSld)
+        vbox.addLayout(hbox1)
         vbox.addWidget(iminEdit)
         vbox.addWidget(iminSld)
         vbox.addWidget(imaxEdit)
         vbox.addWidget(imaxSld)
-        vbox.addWidget(self.xmarkerLabel)
-        vbox.addWidget(self.ymarkerLabel)
 
         centralWidget = QtGui.QWidget(self)
         hbox = QtGui.QHBoxLayout(centralWidget)
@@ -185,7 +192,7 @@ class MainWindow(QtGui.QMainWindow):
         hbox.addLayout(vbox)
         self.setCentralWidget(centralWidget)
 
-        self.resize(1000,800)
+        #self.resize(1000,800)
 
     def loadImages(self):
         self.imgs = io.ImageCollection('sample/sample*.tif')
@@ -194,10 +201,10 @@ class MainWindow(QtGui.QMainWindow):
         self.image = np.dstack((im, im, im)).flatten().tostring()
 
     def xmarkerChanged(self, pos):
-        self.xmarkerLabel.setText(str(pos))
+        self.xmarkerEdit.setText(str(pos))
 
     def ymarkerChanged(self, pos):
-        self.ymarkerLabel.setText(str(pos))
+        self.ymarkerEdit.setText(str(pos))
 
     def changeIndex(self, idx):
         self.idx = idx

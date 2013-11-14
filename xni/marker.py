@@ -70,7 +70,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def initializeGL(self):
-        GL.glEnable(GL.GL_TEXTURE_2D)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+
         GL.glBindTexture(GL.GL_TEXTURE_2D, GL.glGenTextures(1))
         GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 4) # word-alignment
         GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT) # 무슨 뜻?
@@ -80,11 +81,17 @@ class GLWidget(QtOpenGL.QGLWidget):
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB16, self.ix, self.iy, 0, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, self.image)
 
     def paintGL(self):
+        #GL.glClearColor(0.0, 0.0, 1.0, 1.0) # background color
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
         GL.glTranslate(self.xTrans, self.yTrans, 0.0)
         GL.glScale(self.scale, self.scale, 1.0)
+
+        GL.glEnable(GL.GL_BLEND)
+
+        GL.glEnable(GL.GL_TEXTURE_2D)
         GL.glBegin(GL.GL_QUADS)
+        GL.glColor(1.0, 1.0, 1.0, 1.0)
         #GL.glTexCoord(        0.0,         0.0)  # texture coordinate?
         #GL.glVertex  (        0.0,         0.0)
         #GL.glTexCoord(        1.0,         0.0)  # texture coordinate?
@@ -102,6 +109,16 @@ class GLWidget(QtOpenGL.QGLWidget):
         GL.glTexCoord(0.0, 0.0)  # texture coordinate?
         GL.glVertex  (0.0, 1.0)
         GL.glEnd()
+        GL.glDisable(GL.GL_TEXTURE_2D)
+
+        GL.glEnable(GL.GL_POINT_SMOOTH)
+        GL.glPointSize(100*self.scale)
+        GL.glBegin(GL.GL_POINTS)
+        GL.glColor(0.7, 0.5, 0.2, 0.5)
+        GL.glVertex(0.5, 0.5)
+        GL.glEnd()
+
+        GL.glDisable(GL.GL_BLEND)
 
     def resizeGL(self, width, height):
         side = min(width, height)

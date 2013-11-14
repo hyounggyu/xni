@@ -60,6 +60,11 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.scale = newscale
         self.updateGL()
 
+    def getImagePosition(self, normx, normy):
+    	ix = self.ix * (normx - self.xTrans) / self.scale
+    	iy = self.iy * (normy - self.yTrans) / self.scale
+    	return ix, iy
+
     def loadTexture(self, image):
         GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.ix, self.iy, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
         self.updateGL()
@@ -80,14 +85,22 @@ class GLWidget(QtOpenGL.QGLWidget):
         GL.glTranslate(self.xTrans, self.yTrans, 0.0)
         GL.glScale(self.scale, self.scale, 1.0)
         GL.glBegin(GL.GL_QUADS)
-        GL.glTexCoord(        0.0,         0.0)  # texture coordinate?
-        GL.glVertex  (        0.0,         0.0)
-        GL.glTexCoord(        1.0,         0.0)  # texture coordinate?
-        GL.glVertex  (self.normix,         0.0)
-        GL.glTexCoord(        1.0,         1.0)  # texture coordinate?
-        GL.glVertex  (self.normix, self.normiy)
-        GL.glTexCoord(        0.0,         1.0)  # texture coordinate?
-        GL.glVertex  (        0.0, self.normiy)
+        #GL.glTexCoord(        0.0,         0.0)  # texture coordinate?
+        #GL.glVertex  (        0.0,         0.0)
+        #GL.glTexCoord(        1.0,         0.0)  # texture coordinate?
+        #GL.glVertex  (self.normix,         0.0)
+        #GL.glTexCoord(        1.0,         1.0)  # texture coordinate?
+        #GL.glVertex  (self.normix, self.normiy)
+        #GL.glTexCoord(        0.0,         1.0)  # texture coordinate?
+        #GL.glVertex  (        0.0, self.normiy)
+        GL.glTexCoord(0.0, 1.0)  # texture coordinate?
+        GL.glVertex  (0.0, 0.0)
+        GL.glTexCoord(1.0, 1.0)  # texture coordinate?
+        GL.glVertex  (1.0, 0.0)
+        GL.glTexCoord(1.0, 0.0)  # texture coordinate?
+        GL.glVertex  (1.0, 1.0)
+        GL.glTexCoord(0.0, 0.0)  # texture coordinate?
+        GL.glVertex  (0.0, 1.0)
         GL.glEnd()
 
     def resizeGL(self, width, height):
@@ -102,8 +115,12 @@ class GLWidget(QtOpenGL.QGLWidget):
     def mousePressEvent(self, event):
         self.lastPos = QtCore.QPoint(event.pos())
 
-        self.signal.xmarkerChanged.emit(event.x())
-        self.signal.ymarkerChanged.emit(event.y())
+        normx = float(event.x()) / self.size().width()
+        normy = 1. - (float(event.y()) / self.size().height())
+        imgx, imgy = self.getImagePosition(normx, normy)
+
+        self.signal.xmarkerChanged.emit(imgx)
+        self.signal.ymarkerChanged.emit(imgy)
 
     def mouseMoveEvent(self, event):
         dx = event.x() - self.lastPos.x()

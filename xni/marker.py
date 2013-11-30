@@ -38,6 +38,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.scale = 1.0
         self.xTrans = 0.0
         self.yTrans = 0.0
+        self.markerix = 0.5
+        self.markeriy = 0.5
 
         self.lastPos = QtCore.QPoint()
 
@@ -59,11 +61,6 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.xTrans, self.yTrans = (0, 0)
         self.scale = newscale
         self.updateGL()
-
-    def getImagePosition(self, normx, normy):
-    	ix = self.ix * (normx - self.xTrans) / self.scale
-    	iy = self.iy * (normy - self.yTrans) / self.scale
-    	return ix, iy
 
     def loadTexture(self, image):
         GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.ix, self.iy, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
@@ -112,10 +109,10 @@ class GLWidget(QtOpenGL.QGLWidget):
         GL.glDisable(GL.GL_TEXTURE_2D)
 
         GL.glEnable(GL.GL_POINT_SMOOTH)
-        GL.glPointSize(100*self.scale)
+        GL.glPointSize(10*self.scale)
         GL.glBegin(GL.GL_POINTS)
-        GL.glColor(0.7, 0.5, 0.2, 0.5)
-        GL.glVertex(0.5, 0.5)
+        GL.glColor(0.7, 0.5, 0.2, 0.5) # point color
+        GL.glVertex(self.markerix, self.markeriy)
         GL.glEnd()
 
         GL.glDisable(GL.GL_BLEND)
@@ -132,12 +129,16 @@ class GLWidget(QtOpenGL.QGLWidget):
     def mousePressEvent(self, event):
         self.lastPos = QtCore.QPoint(event.pos())
 
+    def mouseReleaseEvent(self, event):
         normx = float(event.x()) / self.size().width()
         normy = 1. - (float(event.y()) / self.size().height())
-        imgx, imgy = self.getImagePosition(normx, normy)
-
+        imgx = self.ix * (normx - self.xTrans) / self.scale
+        imgy = self.iy * (normy - self.yTrans) / self.scale
         self.signal.xmarkerChanged.emit(imgx)
         self.signal.ymarkerChanged.emit(imgy)
+        self.markerix = (normx - self.xTrans) / self.scale
+        self.markeriy = (normy - self.yTrans) / self.scale
+        self.updateGL()
 
     def mouseMoveEvent(self, event):
         dx = event.x() - self.lastPos.x()

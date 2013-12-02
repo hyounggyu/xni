@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    xni.config
+    xni.gui
     ~~~~~~~~~~
 
     :copyright: (c) 2013 by Hyounggyu Kim.
@@ -239,7 +239,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def initShift(self):
         try:
-            pos, errors = read_pos_from_csv(self.conf['Shift']['posfn'], 0, 5, 6)
+            pos, errors = read_pos_from_csv(self.conf['Shift']['posfn'], 0, 3, 4)
             srcdir = self.conf['Base']['srcdir']
             sftdir = self.conf['Shift']['sftdir']
             self.shiftimage = ShiftImage(srcdir, sftdir, self.imgs, pos)

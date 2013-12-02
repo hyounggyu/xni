@@ -124,9 +124,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.img = np.dstack((img, img, img)).flatten().tostring()
         self.imgHeight, self.imgWidth = img.shape
         self.xMarker, self.yMarker = marker
-        if self.xMarker != None:
+        if self.xMarker != None and self.yMarker != None:
             self.xMarker /= float(self.imgWidth)
-        if self.yMarker != None:
             self.yMarker /= float(self.imgHeight)
         if self.reloadTexture == True:
             GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.imgWidth, self.imgHeight, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, self.img)

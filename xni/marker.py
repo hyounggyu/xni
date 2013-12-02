@@ -17,103 +17,74 @@ from skimage import io, transform, util, exposure
 from OpenGL import GL
 from PySide import QtGui, QtCore, QtOpenGL
 
-FIGURE_WIDTH = 700
-FIGURE_HEIGHT = 700
-SLIDER_NORMALIZED_END = 50
 
 class Communicate(QtCore.QObject):
 
-    xmarkerChanged = QtCore.Signal(int)
-    ymarkerChanged = QtCore.Signal(int)
+    xMarkerChanged = QtCore.Signal(int)
+    yMarkerChanged = QtCore.Signal(int)
+
 
 class GLWidget(QtOpenGL.QGLWidget):
-    def __init__(self, ix, iy, image, parent=None):
+
+    def __init__(self, img, marker, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
 
         self.signal = Communicate()
-
-        self.ix, self.iy, self.image = (ix, iy, image)
-        self.normix, self.normiy = (1.0, float(ix)/float(iy))
-        self.ortho = 1.0
-        self.scale = 1.0
-        self.xTrans = 0.0
-        self.yTrans = 0.0
-        self.markerix = 0.5
-        self.markeriy = 0.5
-
         self.lastPos = QtCore.QPoint()
 
-    def setTranslation(self, dx, dy):
-        self.xTrans = self.normalizeTranslation(self.normix*self.scale, self.xTrans+dx) # normix to normimwidth
-        self.yTrans = self.normalizeTranslation(self.normiy*self.scale, self.yTrans+dy)
-        self.updateGL()
+        self.reloadTexture = False
+        # self.img, self.imgWidth, self.imgHeight, self.xMarker, self.yMarker
+        self.setImage(img, marker)
 
-    def setScale(self, normx, normy, delta):
-        oldscale = self.scale
-        newscale = self.scale + delta
-        if newscale > 1.0:
-            self.xTrans = normx - newscale*(normx-self.xTrans)/oldscale
-            self.yTrans = normy - newscale*(normy-self.yTrans)/oldscale
-            self.xTrans = self.normalizeTranslation(self.normix*newscale, self.xTrans) # normix to normimwidth
-            self.yTrans = self.normalizeTranslation(self.normiy*newscale, self.yTrans)
-        else:
-            newscale = 1.0
-            self.xTrans, self.yTrans = (0, 0)
-        self.scale = newscale
-        self.updateGL()
-
-    def loadTexture(self, image):
-        GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.ix, self.iy, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, image)
-        self.updateGL()
+        self.imgScale = 1.0
+        self.xTrans   = 0.0
+        self.yTrans   = 0.0
+        self.normImgWidth = 1.0  # related with glOrtho
+        self.normImgHeight = 1.0 # related with glOrtho
 
     def initializeGL(self):
+        # Initialize blend
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-
+        # Initialize texture
         GL.glBindTexture(GL.GL_TEXTURE_2D, GL.glGenTextures(1))
         GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 4) # word-alignment
         GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT) # 무슨 뜻?
         GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT) # 무슨 뜻?
         GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameter(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB16, self.ix, self.iy, 0, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, self.image)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB16, self.imgWidth, self.imgHeight, 0, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, self.img)
+        self.reloadTexture = True
 
     def paintGL(self):
-        #GL.glClearColor(0.0, 0.0, 1.0, 1.0) # background color
+        GL.glClearColor(0.0, 0.0, 1.0, 1.0) # background color
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
         GL.glTranslate(self.xTrans, self.yTrans, 0.0)
-        GL.glScale(self.scale, self.scale, 1.0)
+        GL.glScale(self.imgScale, self.imgScale, 1.0)
 
         GL.glEnable(GL.GL_BLEND)
 
         GL.glEnable(GL.GL_TEXTURE_2D)
         GL.glBegin(GL.GL_QUADS)
-        GL.glColor(1.0, 1.0, 1.0, 1.0)
-        #GL.glTexCoord(        0.0,         0.0)  # texture coordinate?
-        #GL.glVertex  (        0.0,         0.0)
-        #GL.glTexCoord(        1.0,         0.0)  # texture coordinate?
-        #GL.glVertex  (self.normix,         0.0)
-        #GL.glTexCoord(        1.0,         1.0)  # texture coordinate?
-        #GL.glVertex  (self.normix, self.normiy)
-        #GL.glTexCoord(        0.0,         1.0)  # texture coordinate?
-        #GL.glVertex  (        0.0, self.normiy)
-        GL.glTexCoord(0.0, 1.0)  # texture coordinate?
+        GL.glColor(1.0, 1.0, 1.0, 1.0) # white
+        GL.glTexCoord(0.0, 1.0)
         GL.glVertex  (0.0, 0.0)
-        GL.glTexCoord(1.0, 1.0)  # texture coordinate?
+        GL.glTexCoord(1.0, 1.0)
         GL.glVertex  (1.0, 0.0)
-        GL.glTexCoord(1.0, 0.0)  # texture coordinate?
+        GL.glTexCoord(1.0, 0.0)
         GL.glVertex  (1.0, 1.0)
-        GL.glTexCoord(0.0, 0.0)  # texture coordinate?
+        GL.glTexCoord(0.0, 0.0)
         GL.glVertex  (0.0, 1.0)
         GL.glEnd()
         GL.glDisable(GL.GL_TEXTURE_2D)
 
-        GL.glEnable(GL.GL_POINT_SMOOTH)
-        GL.glPointSize(10*self.scale)
-        GL.glBegin(GL.GL_POINTS)
-        GL.glColor(0.7, 0.5, 0.2, 0.5) # point color
-        GL.glVertex(self.markerix, self.markeriy)
-        GL.glEnd()
+        if self.xMarker != None and self.yMarker != None:
+            GL.glEnable(GL.GL_POINT_SMOOTH) # point shape
+            GL.glPointSize(10*self.imgScale) # point size
+            GL.glBegin(GL.GL_POINTS)
+            GL.glColor(0.7, 0.5, 0.2, 0.5) # point color
+            GL.glVertex(self.xMarker, self.yMarker)
+            GL.glEnd()
 
         GL.glDisable(GL.GL_BLEND)
 
@@ -127,99 +98,144 @@ class GLWidget(QtOpenGL.QGLWidget):
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
     def mousePressEvent(self, event):
-        self.lastPos = QtCore.QPoint(event.pos())
+        if event.button() == QtCore.Qt.LeftButton:
+            self.lastPos = QtCore.QPoint(event.pos())
+            self.pressedPos = QtCore.QPoint(event.pos())
 
     def mouseReleaseEvent(self, event):
-        normx = float(event.x()) / self.size().width()
-        normy = 1. - (float(event.y()) / self.size().height())
-        imgx = self.ix * (normx - self.xTrans) / self.scale
-        imgy = self.iy * (normy - self.yTrans) / self.scale
-        self.signal.xmarkerChanged.emit(imgx)
-        self.signal.ymarkerChanged.emit(imgy)
-        self.markerix = (normx - self.xTrans) / self.scale
-        self.markeriy = (normy - self.yTrans) / self.scale
-        self.updateGL()
+        if event.button() == QtCore.Qt.LeftButton:
+            dx = event.x() - self.pressedPos.x()
+            dy = event.y() - self.pressedPos.y()
+            if dx == 0 and dy == 0:
+                self.setMarker(event.x(), event.y())
 
     def mouseMoveEvent(self, event):
-        dx = event.x() - self.lastPos.x()
-        dy = event.y() - self.lastPos.y()
-
-        #if event.buttons() & QtCore.Qt.LeftButton:
-        self.setTranslation(dx/200., dy/200.) # translation speed is 1/200.
-
-        self.lastPos = QtCore.QPoint(event.pos())
+        if event.buttons() == QtCore.Qt.LeftButton:
+            dx = event.x() - self.lastPos.x()
+            dy = event.y() - self.lastPos.y()
+            if dx != 0 or dy != 0:
+                self.lastPos = QtCore.QPoint(event.pos())
+                self.setTranslation(dx/200., dy/200.) # translation speed is 1/200.
 
     def wheelEvent(self, event):
-        normx = float(event.x()) / self.size().width()
-        normy = 1. - (float(event.y()) / self.size().height())
-        delta = event.delta() / 200. # scale speed
-        self.setScale(normx, normy, delta)
+        self.setScale(event.x(), event.y(), event.delta()/200.) # zoom speed is 1/200.
 
-    def normalizeTranslation(self, imsize, new):
-        transmin = -imsize + self.ortho
+    def setImage(self, img, marker):
+        self.img = np.dstack((img, img, img)).flatten().tostring()
+        self.imgHeight, self.imgWidth = img.shape
+        self.xMarker, self.yMarker = marker
+        if self.xMarker != None:
+            self.xMarker /= float(self.imgWidth)
+        if self.yMarker != None:
+            self.yMarker /= float(self.imgHeight)
+        if self.reloadTexture == True:
+            GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, self.imgWidth, self.imgHeight, GL.GL_RGB, GL.GL_UNSIGNED_SHORT, self.img)
+            self.updateGL()
+
+    def setMarker(self, posx, posy):
+        normposx, normposy = self.normalizeMousePosition(posx, posy)
+        self.xMarker = (normposx - self.xTrans) / self.imgScale
+        self.yMarker = (normposy - self.yTrans) / self.imgScale
+        self.signal.xMarkerChanged.emit(self.xMarker * self.imgWidth)
+        self.signal.yMarkerChanged.emit(self.yMarker * self.imgHeight)
+        self.updateGL()
+
+    def setTranslation(self, dx, dy):
+        self.xTrans = self.normalizeTranslation(self.normImgWidth*self.imgScale, self.xTrans+dx)
+        self.yTrans = self.normalizeTranslation(self.normImgHeight*self.imgScale, self.yTrans+dy)
+        self.updateGL()
+
+    def setScale(self, posx, posy, delta):
+        normposx, normposy = self.normalizeMousePosition(posx, posy)
+        oldscale = self.imgScale
+        newscale = self.imgScale + delta
+        if newscale > 1.0:
+            self.xTrans = normposx - newscale*(normposx-self.xTrans)/oldscale
+            self.yTrans = normposy - newscale*(normposy-self.yTrans)/oldscale
+            self.xTrans = self.normalizeTranslation(self.normImgWidth*newscale, self.xTrans)
+            self.yTrans = self.normalizeTranslation(self.normImgHeight*newscale, self.yTrans)
+        else:
+            newscale = 1.0
+            self.xTrans, self.yTrans = (0., 0.)
+        self.imgScale = newscale
+        self.updateGL()
+
+    def normalizeTranslation(self, length, transnew):
+        transmin = 1.0 - length # 1.0 related with glOrtho
         transmax = 0.0
-        if new > transmax:
-            new = transmax
-        elif new < transmin:
-            new = transmin
-        return new
+        if transnew > transmax:
+            transnew = transmax
+        elif transnew < transmin:
+            transnew = transmin
+        return transnew
+
+    def normalizeMousePosition(self, posx, posy):
+        normposx = float(posx) / self.size().width()
+        normposy = 1. - (float(posy) / self.size().height())
+        return normposx, normposy
+
 
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        self.idx = 0
-        self.imin, self.imax = (0, 1)
+        self.FIGURE_WIDTH = 700
+        self.FIGURE_HEIGHT = 700
+        self.SLIDER_NORMALIZED_END = 50
 
-        self.loadImages()
+        self.idx = 0
+        self.normMinIntensity, self.normMaxIntensity = (0., 1.)
+
+        self.loadImages() # self.imgs, self.xMarkers, self.yMarkers
+
         self.initUI()
 
     def initUI(self):
-        self.glWidget = GLWidget(self.ix, self.iy, self.image)
-        self.glWidget.setFixedSize(FIGURE_WIDTH, FIGURE_HEIGHT)
-        self.glWidget.signal.xmarkerChanged.connect(self.xmarkerChanged)
-        self.glWidget.signal.ymarkerChanged.connect(self.ymarkerChanged)
+        self.glWidget = GLWidget(self.imgs[0], (self.xMarkers[0], self.yMarkers[0]))
+        self.glWidget.setFixedSize(self.FIGURE_WIDTH, self.FIGURE_HEIGHT)
+        self.glWidget.signal.xMarkerChanged.connect(self.xMarkerChanged)
+        self.glWidget.signal.yMarkerChanged.connect(self.yMarkerChanged)
 
         imageSld = QtGui.QSlider(self)
         imageSld.setOrientation(QtCore.Qt.Horizontal)
-        imageSld.setRange(0, 20)
+        imageSld.setRange(0, len(self.imgs))
         imageSld.setSliderPosition(0)
         imageSld.valueChanged[int].connect(self.changeIndex)
 
-        xmarkerLabel     = QtGui.QLabel('x')
-        ymarkerLabel     = QtGui.QLabel('y')
-        self.xmarkerEdit = QtGui.QLineEdit('0')
-        self.ymarkerEdit = QtGui.QLineEdit('0')
+        xMarkerLabel     = QtGui.QLabel('x')
+        yMarkerLabel     = QtGui.QLabel('y')
+        self.xMarkerEdit = QtGui.QLineEdit('0')
+        self.yMarkerEdit = QtGui.QLineEdit('0')
 
-        iminEdit = QtGui.QLineEdit(str(self.imin))
-        imaxEdit = QtGui.QLineEdit(str(self.imax))
+        minIntensityEdit = QtGui.QLineEdit(str(self.normMinIntensity))
+        maxIntensityEdit = QtGui.QLineEdit(str(self.normMaxIntensity))
 
-        iminSld = QtGui.QSlider(self)
-        iminSld.setOrientation(QtCore.Qt.Horizontal)
-        iminSld.setRange(0, SLIDER_NORMALIZED_END)
-        iminSld.setSliderPosition(int(self.imin*SLIDER_NORMALIZED_END))
-        iminSld.valueChanged[int].connect(partial(self.changeIntensity, 'IMIN', iminEdit))
+        minIntensitySld = QtGui.QSlider(self)
+        minIntensitySld.setOrientation(QtCore.Qt.Horizontal)
+        minIntensitySld.setRange(0, self.SLIDER_NORMALIZED_END)
+        minIntensitySld.setSliderPosition(int(self.normMinIntensity*self.SLIDER_NORMALIZED_END))
+        minIntensitySld.valueChanged[int].connect(partial(self.changeIntensity, 'IMIN', minIntensityEdit))
 
-        imaxSld = QtGui.QSlider(self)
-        imaxSld.setOrientation(QtCore.Qt.Horizontal)
-        imaxSld.setRange(0, SLIDER_NORMALIZED_END)
-        imaxSld.setSliderPosition(int(self.imax*SLIDER_NORMALIZED_END))
-        imaxSld.valueChanged[int].connect(partial(self.changeIntensity, 'IMAX', imaxEdit))
+        maxIntensitySld = QtGui.QSlider(self)
+        maxIntensitySld.setOrientation(QtCore.Qt.Horizontal)
+        maxIntensitySld.setRange(0, self.SLIDER_NORMALIZED_END)
+        maxIntensitySld.setSliderPosition(int(self.normMaxIntensity*self.SLIDER_NORMALIZED_END))
+        maxIntensitySld.valueChanged[int].connect(partial(self.changeIntensity, 'IMAX', maxIntensityEdit))
 
         hbox1 = QtGui.QHBoxLayout()
-        hbox1.addWidget(xmarkerLabel)
-        hbox1.addWidget(self.xmarkerEdit)
-        hbox1.addWidget(ymarkerLabel)
-        hbox1.addWidget(self.ymarkerEdit)
+        hbox1.addWidget(xMarkerLabel)
+        hbox1.addWidget(self.xMarkerEdit)
+        hbox1.addWidget(yMarkerLabel)
+        hbox1.addWidget(self.yMarkerEdit)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(imageSld)
         vbox.addLayout(hbox1)
-        vbox.addWidget(iminEdit)
-        vbox.addWidget(iminSld)
-        vbox.addWidget(imaxEdit)
-        vbox.addWidget(imaxSld)
+        vbox.addWidget(minIntensityEdit)
+        vbox.addWidget(minIntensitySld)
+        vbox.addWidget(maxIntensityEdit)
+        vbox.addWidget(maxIntensitySld)
 
         centralWidget = QtGui.QWidget(self)
         hbox = QtGui.QHBoxLayout(centralWidget)
@@ -227,47 +243,47 @@ class MainWindow(QtGui.QMainWindow):
         hbox.addLayout(vbox)
         self.setCentralWidget(centralWidget)
 
-        #self.resize(1000,800)
-
     def loadImages(self):
         self.imgs = io.ImageCollection('sample/sample*.tif')
-        im = self.imgs[0]
-        self.iy, self.ix = im.shape
-        self.image = np.dstack((im, im, im)).flatten().tostring()
+        self.xMarkers = [None] * len(self.imgs)
+        self.yMarkers = [None] * len(self.imgs)
 
-    def xmarkerChanged(self, pos):
-        self.xmarkerEdit.setText(str(pos))
+    def drawImage(self):
+        marker = (self.xMarkers[self.idx], self.yMarkers[self.idx])
+        img = self.imgs[self.idx]
+        minIntensity = self.normMinIntensity * (256*256-1) # 16 bit pixel
+        maxIntensity = self.normMaxIntensity * (256*256-1) # 16 bit pixel
+        img = exposure.rescale_intensity(img, (minIntensity, maxIntensity))
+        self.glWidget.setImage(img, marker)
 
-    def ymarkerChanged(self, pos):
-        self.ymarkerEdit.setText(str(pos))
+    def xMarkerChanged(self, pos):
+        self.xMarkers[self.idx] = pos
+        self.xMarkerEdit.setText(str(pos))
+
+    def yMarkerChanged(self, pos):
+        self.yMarkers[self.idx] = pos
+        self.yMarkerEdit.setText(str(pos))
 
     def changeIndex(self, idx):
         self.idx = idx
         self.drawImage()
 
     def changeIntensity(self, tag, widget, value):
-        value = value / float(SLIDER_NORMALIZED_END)
+        value = value / float(self.SLIDER_NORMALIZED_END)
         if tag == 'IMAX':
-            self.imax = value
+            self.normMaxIntensity = value
         elif tag == 'IMIN':
-            self.imin = value
+            self.normMinIntensity = value
         self.drawImage()
-
-    def drawImage(self):
-        im = self.imgs[self.idx]
-        #imin = util.dtype.dtype_range[im.dtype][0] * self.imin # KeyError uint16
-        #imax = util.dtype.dtype_range[im.dtype][1] * self.imin # KeyError uint16
-        imin = self.imin * (256*256-1)
-        imax = self.imax * (256*256-1)
-        im = exposure.rescale_intensity(im, (imin, imax))
-        self.glWidget.loadTexture(np.dstack((im, im, im)).flatten().tostring())
 
     def msgBox(self, msg):
         msgbox = QtGui.QMessageBox()
         msgbox.setText(msg)
         msgbox.exec_()
 
+
 class App(QtGui.QApplication):
+
     def __init__(self, *argv):
         QtGui.QApplication.__init__(self, *argv)
         self.main = MainWindow()
@@ -278,6 +294,7 @@ class App(QtGui.QApplication):
 
     def bye(self):
         self.exit(0)
+
 
 if __name__ == '__main__':
     global app

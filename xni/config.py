@@ -14,6 +14,11 @@ import numpy as np
 
 from PySide import QtGui, QtCore
 
+FILTERS = {
+  'TIFF': 'TIFF image File (*.tif *.tiff)',
+  'CSV' : 'Comma Seperated Values File (*.txt *.csv)',
+  'CFG' : 'Config file (*.cfg)'
+}
 
 class ConfigWindow(QtGui.QMainWindow):
 
@@ -25,10 +30,7 @@ class ConfigWindow(QtGui.QMainWindow):
     def initUI(self):
         self.srcdirLabel  = QtGui.QLabel('*Source directory')
         self.srcdirEdit   = QtGui.QLineEdit()
-        self.srcdirEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'SourceDirectory'))
-        self.srcdirEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'SourceDirectory'))
         self.srcdirBtn    = QtGui.QPushButton('Select')
-        self.srcdirBtn.clicked.connect(partial(self.selectDirectory, self.srcdirEdit))
 
         self.frstimgLabel= QtGui.QLabel('*First image')
         self.frstimgEdit = QtGui.QLineEdit()
@@ -40,28 +42,45 @@ class ConfigWindow(QtGui.QMainWindow):
 
         self.bgndimgLabel = QtGui.QLabel('Background image')
         self.bgndimgEdit  = QtGui.QLineEdit()
-        self.bgndimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'BackgroundImage'))
-        self.bgndimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'BackgroundImage'))
         self.bgndimgBtn   = QtGui.QPushButton('Select')
-        self.bgndimgBtn.clicked.connect(partial(self.selectFile, self.bgndimgEdit, 'TIFF'))
 
         self.darkimgLabel = QtGui.QLabel('Dark image')
         self.darkimgEdit  = QtGui.QLineEdit()
-        self.darkimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'DarkImage'))
-        self.darkimgEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'DarkImage'))
         self.darkimgBtn   = QtGui.QPushButton('Select')
-        self.darkimgBtn.clicked.connect(partial(self.selectFile, self.darkimgEdit, 'TIFF'))
 
-        self.poscsvLabel  = QtGui.QLabel('Position data file')
+        self.poscsvLabel  = QtGui.QLabel('Position data')
         self.poscsvEdit   = QtGui.QLineEdit()
-        self.poscsvEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'PositionCSVFile'))
-        self.poscsvEdit.textEdited[str].connect(partial(self.setConfig, 'Base', 'PositionCSVFile'))
         self.poscsvBtn    = QtGui.QPushButton('Select')
-        self.poscsvBtn.clicked.connect(partial(self.selectFile, self.poscsvEdit, 'CSV'))
 
-        self.loadBtn      = QtGui.QPushButton('Load Config')
+        self.loadBtn      = QtGui.QPushButton('Load')
+        self.saveBtn      = QtGui.QPushButton('Save')
+
+        self.srcdirEdit.textChanged[str].connect (partial(self.setConfig, 'Base', 'SourceDirectory'))
+        self.srcdirEdit.textEdited[str].connect  (partial(self.setConfig, 'Base', 'SourceDirectory'))
+        self.srcdirBtn.clicked.connect           (partial(self.selectDirectory, self.srcdirEdit))
+
+        self.frstimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'FirstImage'))
+        self.frstimgEdit.textEdited[str].connect (partial(self.setConfig, 'Base', 'FirstImage'))
+        self.frstimgBtn.clicked.connect          (partial(self.selectFile, self.frstimgEdit, 'TIFF'))
+
+        self.lastimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'LastImage'))
+        self.lastimgEdit.textEdited[str].connect (partial(self.setConfig, 'Base', 'LastImage'))
+        self.lastimgBtn.clicked.connect          (partial(self.selectFile, self.lastimgEdit, 'TIFF'))
+
+        self.bgndimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'BackgroundImage'))
+        self.bgndimgEdit.textEdited[str].connect (partial(self.setConfig, 'Base', 'BackgroundImage'))
+        self.bgndimgBtn.clicked.connect          (partial(self.selectFile, self.bgndimgEdit, 'TIFF'))
+
+        self.darkimgEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'DarkImage'))
+        self.darkimgEdit.textEdited[str].connect (partial(self.setConfig, 'Base', 'DarkImage'))
+        self.darkimgBtn.clicked.connect          (partial(self.selectFile, self.darkimgEdit, 'TIFF'))
+
+        self.poscsvEdit.textChanged[str].connect(partial(self.setConfig, 'Base', 'PositionCSVFile'))
+        self.poscsvEdit.textEdited[str].connect (partial(self.setConfig, 'Base', 'PositionCSVFile'))
+        self.poscsvBtn.clicked.connect          (partial(self.selectFile, self.poscsvEdit, 'CSV'))
+
         self.loadBtn.clicked.connect(self.loadConfig)
-        self.saveBtn      = QtGui.QPushButton('Save Config')
+
         self.saveBtn.clicked.connect(self.saveConfig)
 
         grid1 = QtGui.QGridLayout()
@@ -99,45 +118,53 @@ class ConfigWindow(QtGui.QMainWindow):
         self.setCentralWidget(centralWidget)
 
     def selectDirectory(self, widget):
-        directory = QtGui.QFileDialog.getExistingDirectory(self,
-            caption='Select directory', dir=self.getConfig('Base', 'SourceDirectory'))
+        srcdir = self.getConfig('Base', 'SourceDirectory')
+        print srcdir
+        directory = QtGui.QFileDialog.getExistingDirectory(self, caption='Select directory', dir=srcdir)
         widget.setText(directory)
 
     def selectFile(self, widget, _filter):
-        if _filter == 'TIFF':
-            _filter = 'TIFF image File (*.tif *.tiff)'
-        elif _filter == 'CSV':
-            _filter = 'Comma Seperated Values File (*.txt *.csv)'
+        srcdir = self.getConfig('Base', 'SourceDirectory')
+        if _filter in FILTERS.keys():
+            _filter = FILTERS[_filter]
         else:
             _filter = ''
-        fname, _ = QtGui.QFileDialog.getOpenFileName(self,
-            caption='Select file', dir=self.getConfig('Base', 'SourceDirectory'), filter=_filter)
-        widget.setText(fname)
+        print srcdir, type(srcdir)
+        fn, _ = QtGui.QFileDialog.getOpenFileName(self, caption='Select file', dir=srcdir, filter=_filter)
+        widget.setText(fn)
 
     def initConfig(self):
         self.config = ConfigParser.RawConfigParser()
 
-    def getConfig(self, section, key):
-        return self.config.get(section, key)
+    def getConfig(self, section, option):
+        if self.config.has_option(section, option):
+            return self.config.get(section, option)
+        else:
+            return ''
 
-    def setConfig(self, section, key, value):
+    def setConfig(self, section, option, value):
         if not self.config.has_section(section):
             self.config.add_section(section)
-        self.config.set(section, key, value)
+        self.config.set(section, option, value)
 
     def loadConfig(self):
-        fn, _ = QtGui.QFileDialog.getOpenFileName(self,
-            caption="Load configuration", dir=self.getConfig('Base', 'SourceDirectory'), filter="Config file (*.cfg)")
-
+        srcdir = self.getConfig('Base', 'SourceDirectory')
+        fn, _ = QtGui.QFileDialog.getOpenFileName(self, caption="Load configuration", dir=srcdir, filter=FILTERS['CFG'])
         self.config.read(fn)
-
         self.srcdirEdit.setText ( self.getConfig('Base', 'SourceDirectory') )
+        self.frstimgEdit.setText( self.getConfig('Base', 'FirstImage'     ) )
+        self.lastimgEdit.setText( self.getConfig('Base', 'LastImage'      ) )
         self.bgndimgEdit.setText( self.getConfig('Base', 'BackgroundImage') )
         self.darkimgEdit.setText( self.getConfig('Base', 'DarkImage'      ) )
         self.poscsvEdit.setText ( self.getConfig('Base', 'PositionCSVFile') )
 
     def saveConfig(self):
-        fn, _ = QtGui.QFileDialog.getSaveFileName(self,
-            caption="Save configuration", dir=config('Base', 'SourceDirectory'), filter="Config file (*.cfg)")
+        srcdir = self.getConfig('Base', 'SourceDirectory')
+        fn, _ = QtGui.QFileDialog.getSaveFileName(self, caption="Save configuration", dir=srcdir, filter=FILTERS['CFG'])
         f = open(fn, "w")
         self.config.write(f)
+
+    def msgBox(self, msg):
+        msgbox = QtGui.QMessageBox()
+        msgbox.setText(msg)
+        msgbox.exec_()

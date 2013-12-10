@@ -38,11 +38,11 @@ class MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(centralWidget)
 
     def showConfigWindow(self):
-        config = ConfigWindow()
+        config = ConfigWindow(self)
         config.show()
 
     def showMarkerWindow(self):
-    	marker = MarkerWindow()
+    	marker = MarkerWindow(self)
     	marker.show()
 
     def msgBox(self, msg):

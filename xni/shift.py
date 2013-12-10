@@ -11,39 +11,20 @@ import os
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.ndimage.interpolation import shift
-#from tiff import imread, imwrite
-from skimage import io
+
 
 class ShiftImage:
-    def __init__(self, srcdir, tgtdir, fns, pos):
-        self.srcdir = srcdir
-        self.tgtdir = tgtdir
-        self.fns = fns
-        self.pos = pos
 
-        # other interpolation methods are available
-        self.interp_x = interp1d(self.pos[:,0], self.pos[:,1])
-        self.interp_y = interp1d(self.pos[:,0], self.pos[:,2])
+    def __init__(self, centposarray, startangle, endangle, nangles):
+        # pos: numpy array (angle, delta_x, delta_y)
+        # NOTE: other interpolation methods are also available
+        self.interp_x = interp1d(pos[:,0], pos[:,1])
+        self.interp_y = interp1d(pos[:,0], pos[:,2])
 
         # set angle array
-        self.thetas = np.linspace(self.pos[0,0], self.pos[-1,0], len(self.fns))
+        self.thetas = np.linspace(startangle, endangle, nangles)
 
-    def shift_img(self, img, theta):
+    def shift(self, img, theta):
         # x axis : '+' -> left, '-' -> right
         # y axis : '+' -> up, '-' -> down
-        return shift(img, (-1.*self.interp_y(theta), -1.*self.interp_x(theta)))
-
-    def shift_all(self):
-        for fn, theta in zip(self.fns, self.thetas):
-            im = io.imread(os.path.join(self.srcdir, fn))
-            im = self.shift_img(im, theta)
-            io.imsave(os.path.join(self.tgtdir, fn), im)
-
-    def get_pos(self):
-        return self.pos
-
-    def get_interp(self):
-        return self.interp_x, self.interp_y
-
-    def get_thetas(self):
-        return self.thetas
+        return shift(img, (-self.interp_y(theta), -self.interp_x(theta)))

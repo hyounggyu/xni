@@ -174,10 +174,10 @@ class GLWidget(QtOpenGL.QGLWidget):
         return normposx, normposy
 
 
-class MainWindow(QtGui.QMainWindow):
+class MarkerWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super(MarkerWindow, self).__init__(parent)
 
         self.FIGURE_WIDTH = 700
         self.FIGURE_HEIGHT = 700
@@ -279,23 +279,3 @@ class MainWindow(QtGui.QMainWindow):
         msgbox = QtGui.QMessageBox()
         msgbox.setText(msg)
         msgbox.exec_()
-
-
-class App(QtGui.QApplication):
-
-    def __init__(self, *argv):
-        QtGui.QApplication.__init__(self, *argv)
-        self.main = MainWindow()
-        self.lastWindowClosed.connect(self.bye)
-        self.main.show()
-        self.main.activateWindow()
-        self.main.raise_()
-
-    def bye(self):
-        self.exit(0)
-
-
-if __name__ == '__main__':
-    global app
-    app = App(sys.argv)
-    sys.exit(app.exec_())

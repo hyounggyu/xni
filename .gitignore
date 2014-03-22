@@ -34,3 +34,15 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Mac 
+.DS_Store
+
+# Emacs
+*~
+
+# sample data
+sample/
+
+# node modules
+node_modules/

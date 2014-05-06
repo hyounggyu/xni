@@ -35,14 +35,20 @@ nosetests.xml
 .project
 .pydevproject
 
+# node.js
+node_modules/
+
+# Redis
+*.rdb
+
 # Mac 
 .DS_Store
 
 # Emacs
 *~
 
+# PyCharm
+.idea
+
 # sample data
 sample/
-
-# node modules
-node_modules/

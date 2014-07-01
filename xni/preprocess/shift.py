@@ -9,5 +9,6 @@
 
 from scipy.ndimage.interpolation import shift
 
+
 def shift_image(im, dx, dy):
     return shift(im, (dy, dy))

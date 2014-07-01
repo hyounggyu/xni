@@ -50,5 +50,5 @@ node_modules/
 # PyCharm
 .idea
 
-# sample data
-sample/
+# ipython
+.ipy*

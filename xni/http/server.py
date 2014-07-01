@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 
 from flask import Flask, request
-from tifffile.tifffile import TIFFfile
-
+from xni.io.tifffile import *
 from xni.celery.tasks import add
 
 app = Flask(__name__)

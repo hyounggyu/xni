@@ -44,6 +44,9 @@ node_modules/
 # Mac 
 .DS_Store
 
+# Windows
+desktop.ini
+
 # Emacs
 *~
 
@@ -52,3 +55,7 @@ node_modules/
 
 # ipython
 .ipy*
+*.ipynb
+
+# dropbox
+.dropbox

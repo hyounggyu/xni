@@ -5,11 +5,11 @@ app = Celery('xni.celery',
              backend='redis://localhost',
              include=['xni.celery.tasks'])
 
-app.conf.update(
-    CELERY_RESULT_SERIALIZER = 'msgpack',
-    CELERY_TASK_SERIALIZER = 'msgpack',
-    CELERY_ACCEPT_CONTENT = ['msgpack'],
-)
+#app.conf.update(
+#    CELERY_RESULT_SERIALIZER = 'msgpack',
+#    CELERY_TASK_SERIALIZER = 'msgpack',
+#    CELERY_ACCEPT_CONTENT = ['msgpack'],
+#)
 
 if __name__ == '__main__':
     app.start()

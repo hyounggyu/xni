@@ -17,10 +17,10 @@ def shift_image(im, dx, dy):
 def sum_x(im):
     return np.sum(im, axis=1)
 
-def vertical_align(im0_y, im_y, start, end, dy_max):
+def vertical_align(a, v, start, end, dy_max):
     """
     dy_max: -dy_max <= dy <= dy_max
     """
-    corr = np.correlate(im_y[start-dy_max:end+dy_max], im0_y[start:end])
-    dy = dy_max - np.argmax(corr)
+    corr = np.correlate(a[start-dy_max:end+dy_max], v[start:end])
+    dy = np.argmax(corr) - dy_max
     return dy

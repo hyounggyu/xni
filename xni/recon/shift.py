@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    xni.shift
+    xni.recon.shift
     ~~~~~~~~~
 
     :copyright: (c) 2014 by Hyounggyu Kim.

@@ -2,7 +2,7 @@ from celery import Celery
 
 app = Celery('xni.celery',
              broker='amqp://',
-             backend='redis://localhost',
+             #backend='redis://localhost',
              include=['xni.celery.tasks'])
 
 #app.conf.update(

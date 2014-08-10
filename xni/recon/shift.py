@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-    xni.recon.shift
-    ~~~~~~~~~
-
-    :copyright: (c) 2014 by Hyounggyu Kim.
-    :license: GPL, see LICENSE for more details.
-"""
-
 import numpy as np
 from scipy.ndimage.interpolation import shift
 

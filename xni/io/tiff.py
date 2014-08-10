@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-    xni.tiff
-    ~~~~~~~~
-
-    :copyright: (c) 2014 by Hyounggyu Kim.
-    :license: GPL, see LICENSE for more details.
-"""
-
 import sys, collections
 import struct
 import numpy as np
@@ -65,10 +56,10 @@ class imread:
     endian = ''
     next_diroff = 0
     directory = {}
-    
+
     def __init__(self, fname):
         self.fp = open(fname, 'rb') # check error
-        
+
         block = self.fp.read(2)
         (magic,) = struct.unpack('H', block)
         if magic == 0x4d4d:
@@ -82,7 +73,7 @@ class imread:
         (version, self.next_diroff) = struct.unpack(self.endian+'HI', block)
         if version != 42:
             return None # raise error
-            
+
         self.read_dir()
         if not self.is_ok():
             return None # raise error
@@ -130,17 +121,17 @@ class imread:
         bs = self.directory[258]['v'] # bits per sample
         r  = self.directory[278]['v'] # rows per strip
         bc = self.directory[279]['v'] # byte count
-        of = self.directory[273]['v'] # offsets        
-        
+        of = self.directory[273]['v'] # offsets
+
         c = len(bc)
         if c != len(of):
             return 0 # raise error
-            
+
         if bs == 8:
             dt = np.uint8
         elif bs == 16:
             dt = np.uint16
-            
+
         arr = np.empty((l,w), dtype=dt)
         for i in range(c):
             self.fp.seek(of[i], 0)
@@ -155,7 +146,7 @@ class imread:
         # cannot read tiled file
         ret = d[259] == 1 and d[277] == 1 and (d[258] == 8 or d[258] == 16)
         return ret
-        
+
     def get_dir(self):
         return self.directory
 
@@ -169,12 +160,12 @@ class imwrite:
     arr = np.array([])
     ifd_offset_off = 0
     bitspersample = 0
-    
+
     def __init__(self, fname, arr, directory):
         self.fp = open(fname, 'wb')
         self.arr = arr
         self.directory = directory
-        
+
         # set bits per sample from dtype
         if arr.dtype == 'uint8':
             self.bitspersample = 8
@@ -217,20 +208,20 @@ class imwrite:
         buf = struct.pack('I', ifd_offset)
         self.fp.write(buf)
         self.fp.seek(ifd_offset, 0)
-        
+
         # write directory count
         dircount = len(self.directory.keys())
         buf = struct.pack('H', dircount)
         self.fp.write(buf)
-        
+
         # set value offset
         val_offset = ifd_offset + 2 + dircount*12 + 4
-        
+
         for tag, v in self.directory.items():
             dtype = v['dt']
             count = v['c']
             values= v['v']
-            
+
             size, fmt_type = dtype_info.get(dtype, (-1,''))
             # set string value as bytearray
             if dtype == 2:
@@ -241,7 +232,7 @@ class imwrite:
                     values = values + '\x00'
                 count = len(values)
             fmt = str(count)+fmt_type
-            
+
             if size*count > 4:
                 buf = struct.pack('HHII', tag, dtype, count, val_offset)
                 self.fp.write(buf)
@@ -269,4 +260,3 @@ class imwrite:
 
         self.ifd_offset_off = self.fp.tell()
         self.fp.write('\x00'*4)
-

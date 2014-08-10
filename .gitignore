@@ -35,17 +35,15 @@ nosetests.xml
 .project
 .pydevproject
 
-# node.js
-node_modules/
-
-# Redis
-*.rdb
-
-# Mac 
+# Mac
 .DS_Store
+Icon*
 
 # Windows
 desktop.ini
+
+# Dropbox
+.dropbox
 
 # Emacs
 *~
@@ -56,6 +54,3 @@ desktop.ini
 # ipython
 .ipy*
 *.ipynb
-
-# dropbox
-.dropbox

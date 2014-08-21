@@ -1,0 +1,19 @@
+{
+  "name": "xni-webapp",
+  "version": "0.1.0",
+  "homepage": "http://hyounggyu.com",
+  "authors": [
+    "Hyounggyu Kim <hgkim10@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.2.22"
+  }
+}

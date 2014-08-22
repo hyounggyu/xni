@@ -54,3 +54,13 @@ desktop.ini
 # ipython
 .ipy*
 *.ipynb
+
+# imagej
+ijmacros/*.txt
+
+# Matlab
+matlab/*/test
+
+# Web Development
+node_modules/
+bower_components/

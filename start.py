@@ -1,3 +1,4 @@
 from xni.server import manager
 
-manager.start()
+if __name__ == '__main__':
+    manager.start()

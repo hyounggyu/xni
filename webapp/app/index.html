@@ -4,7 +4,29 @@
   <script src="js/controllers.js"></script>
 </head>
 <body ng-controller="ImageShiftCtrl">
-    <button ng-click='sayHello()'>greet</button>
-    <p>{{ greeting }}</p>
+    <h1>XNI Image Shift</h1>
+    <p>Select Image Files</p>
+    <button ng-click='selectImageFiles()'>Select</button>
+    <p>{{ image_files }}</p>
+
+    <p>Select Position File</p>
+    <button ng-click='selectPositionFile()'>Select</button>
+    <p>{{ position_file }}</p>
+
+    <p>Select Destination Directory</p>
+    <button ng-click='selectDestDirectory()'>Select</button>
+    <p>{{ dest_directory }}</p>
+
+    <p>Select Background Image Files</p>
+    <button ng-click='selectBackgroundFiles()'>Select</button>
+    <p>{{ background_files }}</p>
+
+    <p>Select Dark Image Files</p>
+    <button ng-click='selectDarkFiles()'>Select</button>
+    <p>{{ dark_files }}</p>
+
+    <button ng-click='run()'>Run</button>
+
+    <p>{{ response }}</p>
 </body>
 </html>

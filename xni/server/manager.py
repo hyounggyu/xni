@@ -1,7 +1,8 @@
+import os
 import json
 import pickle
 import logging
-from multiprocessing import Process
+from multiprocessing import Process, cpu_count
 
 import zmq
 
@@ -62,6 +63,9 @@ def start():
     context = zmq.Context()
     sender = context.socket(zmq.PUSH)
     sender.bind('tcp://127.0.0.1:9305')
-    for i in range(4):
+    print('Start XNI manager...')
+    nproc = cpu_count() if cpu_count() < 8 else 8
+    for i in range(nproc):
         Process(target=worker.start).start()
+    print('Manager Listen http://localhost:8000...')
     main()

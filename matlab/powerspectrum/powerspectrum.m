@@ -48,9 +48,9 @@ function [freq, power] = powerspectrum(filename, resolution, varargin)
     radius = min(imwidth, imheight);
     power = arrayfun(@(r) integral(r), 1:radius/2-1);
     function ret_val = integral(r)
-        x = round(r*cos(theta))+radius/2;
-        y = round(r*sin(theta))+radius/2;
-        idx = sub2ind([imheight, imwidth], x, y);
+        x = round(r*cos(theta))+imwidth/2;
+        y = round(r*sin(theta))+imheight/2;
+        idx = sub2ind([imheight, imwidth], y, x);
         ret_val = sum(imdata(idx));
     end
 

@@ -24,6 +24,9 @@ function [freq, power] = powerspectrum(filename, resolution, varargin)
 
     % Read image and fourier transform
     imdata = imread(filename);
+    if size(imdata, 3) > 1
+        error('powerspectrum:argChk', 'Image colortype is not grayscale');
+    end
     imdata = double(imdata) / double(max(imdata(:))); % Nomalize 0~1
     imdata = fftshift(fft2(imdata));
     imdata = imdata.*conj(imdata);
@@ -46,12 +49,13 @@ function [freq, power] = powerspectrum(filename, resolution, varargin)
     
     % Calculate Power
     radius = min(imwidth, imheight);
+    [X, Y] = meshgrid(1:imwidth, 1:imheight);
     power = arrayfun(@(r) integral(r), 1:radius/2-1);
     function ret_val = integral(r)
-        x = round(r*cos(theta))+imwidth/2;
-        y = round(r*sin(theta))+imheight/2;
-        idx = sub2ind([imheight, imwidth], y, x);
-        ret_val = sum(imdata(idx));
+        Xq = r*cos(theta)+imwidth/2;
+        Yq = r*sin(theta)+imheight/2;
+        val = interp2(X, Y, imdata, Xq, Yq);
+        ret_val = sum(val);
     end
 
 end

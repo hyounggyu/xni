@@ -45,10 +45,11 @@ function [freq, power] = powerspectrum(filename, resolution, varargin)
     theta = theta(1:end-1);
     
     % Calculate Power
-    power = arrayfun(@(r) integral(r), 1:imwidth/2-1);
+    radius = min(imwidth, imheight);
+    power = arrayfun(@(r) integral(r), 1:radius/2-1);
     function ret_val = integral(r)
-        x = round(r*cos(theta))+imwidth/2;
-        y = round(r*sin(theta))+imheight/2;
+        x = round(r*cos(theta))+radius/2;
+        y = round(r*sin(theta))+radius/2;
         idx = sub2ind([imheight, imwidth], x, y);
         ret_val = sum(imdata(idx));
     end

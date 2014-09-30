@@ -37,7 +37,8 @@ function [freq, power] = powerspectrum(filename, resolution, varargin)
     % Calculate Spatial Frequency
     max_freq = 1/(2*resolution);
     freq = linspace(0, max_freq, imwidth/2-1);
-    
+
+    % Set theta array
     nVarargs = length(varargin);
     if nVarargs == 1
         theta = 0:varargin{1}:2*pi;

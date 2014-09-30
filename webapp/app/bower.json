@@ -1,9 +1,8 @@
 {
   "name": "xni-webapp",
-  "version": "0.1.0",
-  "homepage": "http://hyounggyu.com",
+  "version": "0.3.0",
   "authors": [
-    "Hyounggyu Kim <hgkim10@gmail.com>"
+    "Hyounggyu Kim <khg@gist.ac.kr>"
   ],
   "license": "MIT",
   "ignore": [

@@ -16,8 +16,7 @@ def start():
     print('Start XNI worker')
 
     while True:
-        data = receiver.recv_pyobj()
-        args = pickle.loads(data)
+        args = receiver.recv_pyobj()
         tasks.shift_image(*args)
 
 if __name__ == '__main__':

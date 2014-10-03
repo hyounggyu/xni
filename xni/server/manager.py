@@ -9,6 +9,7 @@ import tornado.web
 
 from . import config
 from . import worker
+from .utils import read_position
 
 CONTEXT = zmq.Context()
 SENDER = CONTEXT.socket(zmq.PUSH)
@@ -26,16 +27,17 @@ class MainHandler(BaseHandler):
 
 class ShiftHandler(BaseHandler):
     def post(self):
-        from .utils import read_position
         imfiles = self.get_argument('imfiles')
         destdir = self.get_argument('destdir')
         posdata = self.get_argument('posdata')
 
         try:
+            imfiles = glob.glob(imfiles)
             imfiles, dx, dy = read_position(imfiles, posdata)
         except Exception as e:
             self.write(e)
             return
+
         for imfile, dx_, dy_ in zip(imfiles, dx, dy):
             SENDER.send_pyobj((imfile, dx_, dy_, destdir))
 
@@ -82,8 +84,8 @@ def main():
 
 
 def start(debug=False):
-    if debug:
-        print('Start XNI manager...')
+    print('Start XNI manager...')
+    if not debug:
         nproc = cpu_count() if cpu_count() < 8 else 8
         for i in range(nproc):
             Process(target=worker.start).start()

@@ -25,7 +25,7 @@ xniApp.controller('XNICtrl', function ($scope, $http) {
                 $scope.destdir_status = data;
             });
     };
-    $scope.run = function() {
+    $scope.shift = function() {
         $http({method: 'POST', url: '/api/v1/shift/', params: {
             imfiles: $scope.imfiles,
             destdir: $scope.destdir,

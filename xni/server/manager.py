@@ -3,6 +3,7 @@ import json
 import pickle
 import logging
 from multiprocessing import Process, cpu_count
+import webbrowser
 
 import zmq
 
@@ -63,8 +64,12 @@ def main(HOST='127.0.0.1', PORT=8000):
             (r'/shift/', ShiftHandler),
         ],
     )
-    print('Listen http://{}:{}/...'.format(HOST, PORT))
-    app.listen('{}'.format(PORT))
+    webserver_uri = 'http://{}:{}/'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT)
+    app.listen('{}'.format(config.WEBSERVER_PORT))
+    # Open web browser
+    webbrowser.open_new('{}app/index.html'.format(webserver_uri))
+    # Start Tornado
+    print('Listen {}...'.format(webserver_uri))
     tornado.ioloop.IOLoop.instance().start()
 
 

@@ -3,29 +3,27 @@
   <script src="bower_components/angular/angular.js"></script>
   <script src="js/controllers.js"></script>
 </head>
-<body ng-controller="ImageShiftCtrl">
-    <h1>XNI Image Shift</h1>
-    <p>Select Image Files</p>
-    <button ng-click='selectImageFiles()'>Select</button>
-    <p>{{ image_files }}</p>
+<body ng-controller="XNICtrl">
+    <h1>XNI Reconstruction</h1>
 
-    <p>Select Position File</p>
-    <button ng-click='selectPositionFile()'>Select</button>
-    <p>{{ position_file }}</p>
+    <h2>Choose dataset</h2>
 
-    <p>Select Destination Directory</p>
-    <button ng-click='selectDestDirectory()'>Select</button>
-    <p>{{ dest_directory }}</p>
+    <p>Select Image Files (at server)</p>
+    <input type="text" ng-model="imfiles" ng-change="imfiles_change()" />
+    <p>{{ imfiles_status }}</p>
 
-    <p>Select Background Image Files</p>
-    <button ng-click='selectBackgroundFiles()'>Select</button>
-    <p>{{ background_files }}</p>
+    <p>Select Destination Directory (at server)</p>
+    <input type="text" ng-model="destdir" ng-change="destdir_change()" />
+    <p>{{ destdir_status }}</p>
 
-    <p>Select Dark Image Files</p>
-    <button ng-click='selectDarkFiles()'>Select</button>
-    <p>{{ dark_files }}</p>
 
-    <button ng-click='run()'>Run</button>
+    <h2>Position based image shift</h2>
+
+    <p>Theta, X, Y</p>
+
+    <textarea ng-model="position_data"></textarea>
+
+    <button ng-click='shift()'>Run</button>
 
     <p>{{ response }}</p>
 </body>

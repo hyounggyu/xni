@@ -1,7 +1,5 @@
 import os
-import json
-import pickle
-import logging
+import glob
 from multiprocessing import Process, cpu_count
 import webbrowser
 
@@ -18,50 +16,59 @@ SENDER.bind('tcp://{}:{}'.format(config.VENTILATOR_HOST, config.VENTILATOR_PORT)
 
 
 class BaseHandler(tornado.web.RequestHandler):
-    pass
-
-
-class MainHandler(BaseHandler):
     def get(self):
         self.write("Hello, world")
 
 
-class ShiftHandler(BaseHandler):
-    def get(self):
-        self.write('Hello')
+class MainHandler(BaseHandler):
+    pass
 
+
+class ShiftHandler(BaseHandler):
     def post(self):
         from .utils import read_position
-        config = self.get_arguments('config', None)
-        config = json.loads(config[0])
+        imfiles = self.get_argument('imfiles')
+        destdir = self.get_argument('destdir')
+        posdata = self.get_argument('posdata')
 
         try:
-            imfiles = config['image_files']
-            posfile = config['position_file'][0]
-            destdir = config['dest_directory'][0]
-            imfiles, dx, dy = read_position(imfiles, posfile)
+            imfiles, dx, dy = read_position(imfiles, posdata)
         except Exception as e:
             self.write(e)
             return
         for imfile, dx_, dy_ in zip(imfiles, dx, dy):
-            sender.send(pickle.dumps((imfile, dx_, dy_, destdir)))
-
-        files = []
-        if 'background_files' in config:
-            files.extend(config['background_files'])
-        if 'dark_files' in config:
-            files.extend(config['dark_files'])
-        for file in files:
-            sender.send(pickle.dumps((file, 0, 0, destdir)))
+            SENDER.send_pyobj((imfile, dx_, dy_, destdir))
 
         self.write('OK')
 
 
-def main(HOST='127.0.0.1', PORT=8000):
+class PathHandler(BaseHandler):
+    def post(self):
+        path = self.get_argument('path')
+        dirname = os.path.dirname(path)
+        pattern = os.path.basename(path)
+
+        if os.path.isdir(dirname):
+            if pattern == '':
+                self.write('OK')
+            else:
+                files = glob.glob1(dirname, pattern)
+                self.write('{} files'.format(len(files)))
+
+class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
+
+def main():
+    static_path = os.path.join(os.path.dirname(__file__), "webapp", "app")
     app = tornado.web.Application(
         [
             (r'/', MainHandler),
-            (r'/shift/', ShiftHandler),
+            (r'/api/v1/shift/', ShiftHandler),
+            (r'/api/v1/path/', PathHandler),
+            (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )
     webserver_uri = 'http://{}:{}/'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT)

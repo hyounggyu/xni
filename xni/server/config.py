@@ -1,0 +1,4 @@
+
+VENTILATOR_HOST = '127.0.0.1'
+VENTILATOR_PORT = '9305' # IU's birthday (1993-May-16)
+

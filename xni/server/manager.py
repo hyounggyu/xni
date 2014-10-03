@@ -8,6 +8,7 @@ import zmq
 
 import tornado.web
 
+from . import config
 from . import worker
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -48,24 +49,25 @@ class ShiftHandler(BaseHandler):
         self.write('OK')
 
 
-def main():
+def main(HOST='127.0.0.1', PORT=8000):
     app = tornado.web.Application(
         [
             (r'/', MainHandler),
             (r'/shift/', ShiftHandler),
         ],
     )
-    app.listen('8000')
+    print('Listen http://{}:{}/...'.format(HOST, PORT))
+    app.listen('{}'.format(PORT))
     tornado.ioloop.IOLoop.instance().start()
+
 
 def start():
     global sender
     context = zmq.Context()
     sender = context.socket(zmq.PUSH)
-    sender.bind('tcp://127.0.0.1:9305')
+    sender.bind('tcp://{}:{}'.format(config.VENTILATOR_HOST, config.VENTILATOR_PORT))
     print('Start XNI manager...')
     nproc = cpu_count() if cpu_count() < 8 else 8
     for i in range(nproc):
         Process(target=worker.start).start()
-    print('Manager Listen http://localhost:8000...')
     main()

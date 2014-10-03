@@ -3,11 +3,15 @@ import pickle
 import zmq
 
 from . import tasks
+from . import config
+
+
+VENTILATOR_URI = 'tcp://{}:{}'.format(config.VENTILATOR_HOST, config.VENTILATOR_PORT)
 
 def start():
     context = zmq.Context()
     receiver = context.socket(zmq.PULL)
-    receiver.connect('tcp://127.0.0.1:9305')
+    receiver.connect(VENTILATOR_URI)
 
     print('Start XNI worker')
 

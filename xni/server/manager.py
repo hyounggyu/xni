@@ -55,6 +55,7 @@ class PathHandler(BaseHandler):
                 files = glob.glob1(dirname, pattern)
                 self.write('{} files'.format(len(files)))
 
+
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         # Disable cache

@@ -11,12 +11,15 @@ import tornado.web
 from . import config
 from . import worker
 
+
 class BaseHandler(tornado.web.RequestHandler):
     pass
+
 
 class MainHandler(BaseHandler):
     def get(self):
         self.write("Hello, world")
+
 
 class ShiftHandler(BaseHandler):
     def get(self):

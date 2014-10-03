@@ -11,6 +11,10 @@ import tornado.web
 from . import config
 from . import worker
 
+CONTEXT = zmq.Context()
+SENDER = CONTEXT.socket(zmq.PUSH)
+SENDER.bind('tcp://{}:{}'.format(config.VENTILATOR_HOST, config.VENTILATOR_PORT))
+
 
 class BaseHandler(tornado.web.RequestHandler):
     pass
@@ -64,13 +68,10 @@ def main(HOST='127.0.0.1', PORT=8000):
     tornado.ioloop.IOLoop.instance().start()
 
 
-def start():
-    global sender
-    context = zmq.Context()
-    sender = context.socket(zmq.PUSH)
-    sender.bind('tcp://{}:{}'.format(config.VENTILATOR_HOST, config.VENTILATOR_PORT))
-    print('Start XNI manager...')
-    nproc = cpu_count() if cpu_count() < 8 else 8
-    for i in range(nproc):
-        Process(target=worker.start).start()
+def start(debug=False):
+    if debug:
+        print('Start XNI manager...')
+        nproc = cpu_count() if cpu_count() < 8 else 8
+        for i in range(nproc):
+            Process(target=worker.start).start()
     main()

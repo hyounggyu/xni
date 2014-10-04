@@ -1,4 +1,5 @@
 import os
+import csv
 import glob
 from multiprocessing import Process, cpu_count
 import webbrowser
@@ -9,7 +10,7 @@ import tornado.web
 
 from . import config
 from . import worker
-from .utils import read_position
+from .utils import interp_position
 
 CONTEXT = zmq.Context()
 SENDER = CONTEXT.socket(zmq.PUSH)
@@ -33,9 +34,13 @@ class ShiftHandler(BaseHandler):
 
         try:
             imfiles = glob.glob(imfiles)
-            imfiles, dx, dy = read_position(imfiles, posdata)
+            reader = csv.reader(posdata.splitlines())
+            pos = []
+            for row in reader:
+                pos.append([float(row[0]), float(row[1]), float(row[2])])
+            dx, dy = interp_position(len(imfiles), pos)
         except Exception as e:
-            self.write(e)
+            self.write(str(e))
             return
 
         for imfile, dx_, dy_ in zip(imfiles, dx, dy):
@@ -64,7 +69,7 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
-def main():
+def main(open_webbrowser=True):
     static_path = os.path.join(os.path.dirname(__file__), "webapp", "app")
     app = tornado.web.Application(
         [
@@ -77,7 +82,8 @@ def main():
     webserver_uri = 'http://{}:{}/'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT)
     app.listen('{}'.format(config.WEBSERVER_PORT))
     # Open web browser
-    webbrowser.open_new('{}app/index.html'.format(webserver_uri))
+    if open_webbrowser:
+        webbrowser.open_new('{}app/index.html'.format(webserver_uri))
     # Start Tornado
     print('Listen {}...'.format(webserver_uri))
     tornado.ioloop.IOLoop.instance().start()
@@ -89,4 +95,4 @@ def start(debug=False):
         nproc = cpu_count() if cpu_count() < 8 else 8
         for i in range(nproc):
             Process(target=worker.start).start()
-    main()
+    main(open_webbrowser=False)

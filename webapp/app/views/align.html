@@ -6,14 +6,14 @@
 
 <div class="form-group">
     <label for="inputImageFilePattern">Input Image Files with pattern (at server)</label>
-    <input type="text" id="inputImageFilePattern" class="form-control" ng-model="imfiles" ng-change="imfiles_change()" />
-    {{ imfiles_status }}
+    <input type="text" id="inputImageFilePattern" class="form-control" ng-model="Dataset.imfiles">
 </div>
 <div class="form-group">
     <label for="inputDestinationDirectory">Input Destination Directory (at server)</label>
-    <input type="text" id="inputDestinationDirectory" class="form-control" ng-model="destdir" ng-change="destdir_change()" />
-    {{ destdir_status }}
+    <input type="text" id="inputDestinationDirectory" class="form-control" ng-model="Dataset.destdir">
 </div>
+
+<div class="alert" role="alert">{{ Dataset.imfiles }}</div>
 
 <h2>Position based image shift</h2>
 

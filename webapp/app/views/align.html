@@ -1,22 +1,28 @@
-<h1>Alignment</h1>
+<div class="page-header">
+    <h1>Alignment</h1>
+</div>
 
 <h2>Choose dataset</h2>
 
-<p>Select Image Files (at server)</p>
-<input type="text" ng-model="imfiles" ng-change="imfiles_change()" />
-<p>{{ imfiles_status }}</p>
-
-<p>Select Destination Directory (at server)</p>
-<input type="text" ng-model="destdir" ng-change="destdir_change()" />
-<p>{{ destdir_status }}</p>
-
+<div class="form-group">
+    <label for="inputImageFilePattern">Input Image Files with pattern (at server)</label>
+    <input type="text" id="inputImageFilePattern" class="form-control" ng-model="imfiles" ng-change="imfiles_change()" />
+    {{ imfiles_status }}
+</div>
+<div class="form-group">
+    <label for="inputDestinationDirectory">Input Destination Directory (at server)</label>
+    <input type="text" id="inputDestinationDirectory" class="form-control" ng-model="destdir" ng-change="destdir_change()" />
+    {{ destdir_status }}
+</div>
 
 <h2>Position based image shift</h2>
 
-<p>Theta, Image Center X, Image Center Y</p>
+<div class="form-group">
+    <label for="inputPositionData">Input Position Data</label>
+    <textarea id="inputPositionData" class="form-control" rows="7" ng-model="posdata"></textarea>
+    <span class="help-block">CSV Format: Theta, Image Center X, Image Center Y</span>
+</div>
 
-<textarea ng-model="posdata"></textarea>
-
-<p></p><button ng-click='shift()'>Shift</button></p>
+<button type="button" class="btn btn-default" ng-click='shift()'>Shift</button>
 
 <p>{{ response }}</p>

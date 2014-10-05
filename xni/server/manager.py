@@ -70,7 +70,7 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
 
 
 def main(open_webbrowser=True):
-    static_path = os.path.join(os.path.dirname(__file__), "html", "dist")
+    static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
         [
             (r'/', MainHandler),

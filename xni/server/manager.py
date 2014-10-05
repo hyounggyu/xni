@@ -69,7 +69,7 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
-def main(open_webbrowser=True):
+def main(open_browser=True):
     static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
         [
@@ -79,13 +79,10 @@ def main(open_webbrowser=True):
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )
-    webserver_uri = 'http://{}:{}/'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT)
-    app.listen('{}'.format(config.WEBSERVER_PORT))
+    app.listen(config.WEBSERVER_PORT)
     # Open web browser
-    if open_webbrowser:
-        webbrowser.open_new('{}app/index.html'.format(webserver_uri))
-    # Start Tornado
-    print('Listen {}...'.format(webserver_uri))
+    if open_browser:
+        webbrowser.open_new('http://{}:{}/app/index.html'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT))
     tornado.ioloop.IOLoop.instance().start()
 
 
@@ -95,4 +92,4 @@ def start(debug=False):
         nproc = cpu_count() if cpu_count() < 8 else 8
         for i in range(nproc):
             Process(target=worker.start).start()
-    main(open_webbrowser=False)
+    main(open_browser=False)

@@ -62,5 +62,7 @@ ijmacros/*.txt
 matlab/*/test
 
 # Web Development
-node_modules/
-bower_components/
+node_modules
+.tmp
+.sass-cache
+bower_components

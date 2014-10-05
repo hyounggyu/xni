@@ -6,16 +6,26 @@ import webbrowser
 
 import zmq
 
+# https://github.com/ipython/ipython/blob/master/IPython/html/notebookapp.py
+# Install the pyzmq ioloop. This has to be done before anything else from
+# tornado is imported.
+from zmq.eventloop import ioloop
+from zmq.eventloop import zmqstream
+ioloop.install()
+
 import tornado.web
 
 from . import config
 from . import worker
 from .utils import interp_position
 
+
 CONTEXT = zmq.Context()
 SENDER = CONTEXT.socket(zmq.PUSH)
-SENDER.bind('tcp://{}:{}'.format(config.VENTILATOR_HOST, config.VENTILATOR_PORT))
-
+SENDER.bind(config.VENTILATOR_URI)
+RECEIVER = CONTEXT.socket(zmq.PULL)
+RECEIVER.bind(config.SINK_URI)
+STREAM = zmqstream.ZMQStream(RECEIVER)
 
 class BaseHandler(tornado.web.RequestHandler):
     def get(self):
@@ -69,6 +79,10 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
+def status(msg):
+    print(msg)
+
+
 def main(open_browser=True):
     static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
@@ -80,10 +94,14 @@ def main(open_browser=True):
         ],
     )
     app.listen(config.WEBSERVER_PORT)
+    STREAM.on_recv(status)
     # Open web browser
     if open_browser:
         webbrowser.open_new('http://{}:{}/app/index.html'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT))
-    tornado.ioloop.IOLoop.instance().start()
+    try:
+        ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        pass
 
 
 def start(debug=False):

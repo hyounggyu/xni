@@ -2148,7 +2148,7 @@ def read_micromanager_metadata(fh):
     return results
 
 
-def _replace_by(module_function, package=None, warn=True):
+def _replace_by(module_function, package=None, warn=False):
     """Try replace decorated function by module.function."""
     try:
         from importlib import import_module

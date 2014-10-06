@@ -56,18 +56,23 @@ class ShiftHandler(BaseHandler):
         self.write('OK')
 
 
-class PathHandler(BaseHandler):
+class PathFilesHandler(BaseHandler):
     def post(self):
-        path = self.get_argument('path')
-        dirname = os.path.dirname(path)
-        pattern = os.path.basename(path)
+        pattern = self.get_argument('pattern')
 
-        if os.path.isdir(dirname):
-            if pattern == '':
-                self.write('OK')
-            else:
-                files = glob.glob1(dirname, pattern)
-                self.write('{} files'.format(len(files)))
+        files = glob.glob(pattern)
+        self.write('{} files'.format(len(files)))
+
+
+class PathDirectoryHandler(BaseHandler):
+    def post(self):
+        path = self.get_argument('directory')
+
+        if os.path.isdir(path):
+            self.write('OK')
+        else:
+            self.set_status(404)
+            self.write('Could not find directory')
 
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
@@ -77,7 +82,7 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
 
 
 def status(msg):
-    print(msg)
+    pass
 
 
 def service_web():
@@ -86,7 +91,8 @@ def service_web():
         [
             (r'/', MainHandler),
             (r'/api/v1/shift/', ShiftHandler),
-            (r'/api/v1/path/', PathHandler),
+            (r'/api/v1/path/files/', PathFilesHandler),
+            (r'/api/v1/path/directory/', PathDirectoryHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )

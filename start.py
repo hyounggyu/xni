@@ -1,4 +1,4 @@
-from xni.server import manager
+from xni.server.manager import start
 
 if __name__ == '__main__':
-    manager.start()
+    start()

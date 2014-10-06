@@ -18,12 +18,8 @@ def start():
     print('Start XNI worker...')
 
     while True:
-        # https://github.com/zeromq/pyzmq/issues/348
         try:
             args = RECEIVER.recv_pyobj()
-        except zmq.ZMQError as e:
-            if e.errno == errno.EINTR:
-                continue
         except KeyboardInterrupt:
             break
         tasks.shift_image(*args)

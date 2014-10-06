@@ -17,7 +17,7 @@ import tornado.web
 
 from . import config
 from . import worker
-from .utils import interp_position
+from ..align.interpolation import interp_position
 
 
 SENDER = None

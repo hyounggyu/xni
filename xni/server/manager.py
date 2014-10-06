@@ -94,6 +94,7 @@ def service_web():
 
 
 def service_zmq():
+    global SENDER, STREAM
     context = zmq.Context()
     SENDER = context.socket(zmq.PUSH)
     SENDER.bind(config.VENTILATOR_URI)
@@ -105,7 +106,7 @@ def service_zmq():
 
 def start():
     print('Start XNI manager...')
-    if False:
+    if True:
         nproc = cpu_count() if cpu_count() < 8 else 8
         for i in range(nproc):
             Process(target=worker.start).start()

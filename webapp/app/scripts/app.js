@@ -17,12 +17,6 @@ angular
         'ngSanitize',
         'ngTouch'
     ])
-    .factory('Dataset', function () {
-        return {
-            imfiles: null,
-            destdir: null
-        }
-    })
     .config(function ($routeProvider) {
         $routeProvider
             .when('/', {

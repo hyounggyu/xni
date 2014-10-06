@@ -20,12 +20,9 @@ from . import worker
 from .utils import interp_position
 
 
-CONTEXT = zmq.Context()
-SENDER = CONTEXT.socket(zmq.PUSH)
-SENDER.bind(config.VENTILATOR_URI)
-RECEIVER = CONTEXT.socket(zmq.PULL)
-RECEIVER.bind(config.SINK_URI)
-STREAM = zmqstream.ZMQStream(RECEIVER)
+SENDER = None
+STREAM = None
+
 
 class BaseHandler(tornado.web.RequestHandler):
     def get(self):
@@ -83,7 +80,7 @@ def status(msg):
     print(msg)
 
 
-def main(open_browser=True):
+def service_web():
     static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
         [
@@ -94,20 +91,29 @@ def main(open_browser=True):
         ],
     )
     app.listen(config.WEBSERVER_PORT)
+
+
+def service_zmq():
+    context = zmq.Context()
+    SENDER = context.socket(zmq.PUSH)
+    SENDER.bind(config.VENTILATOR_URI)
+    receiver = context.socket(zmq.PULL)
+    receiver.bind(config.SINK_URI)
+    STREAM = zmqstream.ZMQStream(receiver)
     STREAM.on_recv(status)
-    # Open web browser
-    if open_browser:
-        webbrowser.open_new('http://{}:{}/app/index.html'.format(config.WEBSERVER_HOST, config.WEBSERVER_PORT))
+
+
+def start():
+    print('Start XNI manager...')
+    if False:
+        nproc = cpu_count() if cpu_count() < 8 else 8
+        for i in range(nproc):
+            Process(target=worker.start).start()
+    service_zmq()
+    service_web()
+    if False:
+        webbrowser.open_new(config.WEBSERVER_URI)
     try:
         ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         pass
-
-
-def start(debug=False):
-    print('Start XNI manager...')
-    if not debug:
-        nproc = cpu_count() if cpu_count() < 8 else 8
-        for i in range(nproc):
-            Process(target=worker.start).start()
-    main(open_browser=False)

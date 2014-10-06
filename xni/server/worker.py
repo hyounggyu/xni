@@ -6,15 +6,18 @@ from . import tasks
 from . import config
 
 
-
-CONTEXT = zmq.Context()
-RECEIVER = CONTEXT.socket(zmq.PULL)
-RECEIVER.connect(config.VENTILATOR_URI)
-SENDER = CONTEXT.socket(zmq.PUSH)
-SENDER.connect(config.SINK_URI)
+RECEIVER = None
+SENDER = None
 
 
 def start():
+    global RECEIVER, SENDER
+    context = zmq.Context()
+    RECEIVER = context.socket(zmq.PULL)
+    RECEIVER.connect(config.VENTILATOR_URI)
+    SENDER = context.socket(zmq.PUSH)
+    SENDER.connect(config.SINK_URI)
+
     print('Start XNI worker...')
 
     while True:
@@ -23,7 +26,8 @@ def start():
         except KeyboardInterrupt:
             break
         tasks.shift_image(*args)
-        SENDER.send('finish')
+        SENDER.send(b'finish')
+
 
 if __name__ == '__main__':
     start()

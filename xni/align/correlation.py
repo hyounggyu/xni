@@ -39,7 +39,7 @@ def ccorr2d(ref, trans):
     ny, nx = np.shape(ref)
 
     # 2D Cross-correlation
-    ccorr = np.fft.ifft2(np.multiply(np.conj(np.fft.fft2(trans)), np.fft.fft2(ref)))
+    ccorr = np.fft.ifft2(np.multiply(np.conj(np.fft.fft2(ref)), np.fft.fft2(trans)))
     peak_y, peak_x = np.unravel_index(np.argmax(ccorr), ccorr.shape)
 
     # Reference: Stack Overflow: 4148292

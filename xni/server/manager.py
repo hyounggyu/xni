@@ -1,7 +1,7 @@
 import os
 import csv
 import glob
-from multiprocessing import Process, cpu_count
+import multiprocessing
 import webbrowser
 
 import zmq
@@ -113,9 +113,9 @@ def service_zmq():
 def start():
     print('Start XNI manager...')
     if True:
-        nproc = cpu_count() if cpu_count() < 8 else 8
+        nproc = multiprocessing.cpu_count() if multiprocessing.cpu_count() < 8 else 8
         for i in range(nproc):
-            Process(target=worker.start).start()
+            multiprocessing.Process(target=worker.start).start()
     service_zmq()
     service_web()
     if False:

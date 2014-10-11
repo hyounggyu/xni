@@ -2,6 +2,8 @@ import os
 import csv
 import glob
 import multiprocessing
+import pickle
+import uuid
 import webbrowser
 
 import zmq
@@ -22,7 +24,9 @@ from ..align.interpolation import interp_position
 
 SENDER = None
 STREAM = None
-
+SAVED_RESULTS = dict()
+RESULTS = dict()
+STATUS = dict()
 
 class BaseHandler(tornado.web.RequestHandler):
     def get(self):
@@ -50,8 +54,12 @@ class ShiftHandler(BaseHandler):
             self.write(str(e))
             return
 
+        task_id = uuid.uuid4()
+        length = len(imfiles)
+        index = 0
         for imfile, dx_, dy_ in zip(imfiles, dx, dy):
-            SENDER.send_pyobj((imfile, dx_, dy_, destdir))
+            SENDER.send_pyobj([task_id, length, {index: (imfile, dx_, dy_, destdir)}])
+            index = index + 1
 
         self.write('OK')
 
@@ -75,14 +83,28 @@ class PathDirectoryHandler(BaseHandler):
             self.write('Could not find directory')
 
 
+class ResultHandler(BaseHandler):
+    def get(self):
+        print (SAVED_RESULTS)
+        print (STATUS)
+        self.write('OK')
+
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
-def status(msg):
-    pass
+def collect_results(msg):
+    global SAVED_RESULTS, RESULTS, STATUS
+    task_id, length, d = pickle.loads(msg[0]) # It will always be multipart
+    if task_id in RESULTS:
+        RESULTS[task_id].update(d)
+    else:
+        RESULTS[task_id] = d
+    if length == len(RESULTS[task_id].items()):
+        SAVED_RESULTS[task_id] = [RESULTS[task_id][index] for index in sorted(RESULTS[task_id])]
+        STATUS[task_id] = 'SUCCESS'
 
 
 def service_web():
@@ -93,6 +115,7 @@ def service_web():
             (r'/api/v1/shift/', ShiftHandler),
             (r'/api/v1/path/files/', PathFilesHandler),
             (r'/api/v1/path/directory/', PathDirectoryHandler),
+            (r'/api/v1/results/', ResultHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )
@@ -107,7 +130,7 @@ def service_zmq():
     receiver = context.socket(zmq.PULL)
     receiver.bind(config.SINK_URI)
     STREAM = zmqstream.ZMQStream(receiver)
-    STREAM.on_recv(status)
+    STREAM.on_recv(collect_results)
 
 
 def start():

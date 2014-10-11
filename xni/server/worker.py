@@ -1,4 +1,5 @@
 import errno
+import pickle
 
 import zmq
 
@@ -17,11 +18,15 @@ def start():
 
     while True:
         try:
-            args = receiver.recv_pyobj()
+            msg = receiver.recv_pyobj()
         except KeyboardInterrupt:
             break
-        tasks.shift_image(*args)
-        sender.send(b'finish')
+        task_id, length, data = msg
+        for index, args in data.items():
+            result = 'filename'
+            #tasks.shift_image(*args)
+            result_msg = pickle.dumps([task_id, length, {index: result}])
+            sender.send(result_msg)
 
 
 if __name__ == '__main__':

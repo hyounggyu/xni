@@ -83,11 +83,10 @@ class PathDirectoryHandler(BaseHandler):
             self.write('Could not find directory')
 
 
-class ResultHandler(BaseHandler):
-    def get(self):
-        print (SAVED_RESULTS)
-        print (STATUS)
+class TasksHandler(BaseHandler):
+    def get(self, task_id):
         self.write('OK')
+
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
@@ -115,7 +114,7 @@ def service_web():
             (r'/api/v1/shift/', ShiftHandler),
             (r'/api/v1/path/files/', PathFilesHandler),
             (r'/api/v1/path/directory/', PathDirectoryHandler),
-            (r'/api/v1/results/', ResultHandler),
+            (r'/api/v1/tasks/(.*)', TasksHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )

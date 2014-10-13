@@ -2,8 +2,6 @@ import os
 import csv
 import glob
 import multiprocessing
-import pickle
-import uuid
 import webbrowser
 
 import zmq
@@ -19,14 +17,13 @@ import tornado.web
 
 from . import config
 from . import worker
+from .data import scatter, gather
 from ..align.interpolation import interp_position
 
 
 SENDER = None
 STREAM = None
-SAVED_RESULTS = dict()
-RESULTS = dict()
-STATUS = dict()
+
 
 class BaseHandler(tornado.web.RequestHandler):
     def get(self):
@@ -39,12 +36,12 @@ class MainHandler(BaseHandler):
 
 class ShiftHandler(BaseHandler):
     def post(self):
-        imfiles = self.get_argument('imfiles')
+        imfiles_pattern = self.get_argument('imfiles')
         destdir = self.get_argument('destdir')
         posdata = self.get_argument('posdata')
 
         try:
-            imfiles = glob.glob(imfiles)
+            imfiles = glob.glob(imfiles_pattern)
             reader = csv.reader(posdata.splitlines())
             pos = []
             for row in reader:
@@ -54,12 +51,8 @@ class ShiftHandler(BaseHandler):
             self.write(str(e))
             return
 
-        task_id = uuid.uuid4()
-        length = len(imfiles)
-        index = 0
-        for imfile, dx_, dy_ in zip(imfiles, dx, dy):
-            SENDER.send_pyobj([task_id, length, {index: (imfile, dx_, dy_, destdir)}])
-            index = index + 1
+        args_list = [(imfile, dy_, dx_, destdir) for imfile, dy_, dx_ in zip(imfiles, dy, dx)]
+        scatter(SENDER, 'shift_image', args_list)
 
         self.write('OK')
 
@@ -94,18 +87,6 @@ class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
-def collect_results(msg):
-    global SAVED_RESULTS, RESULTS, STATUS
-    task_id, length, d = pickle.loads(msg[0]) # It will always be multipart
-    if task_id in RESULTS:
-        RESULTS[task_id].update(d)
-    else:
-        RESULTS[task_id] = d
-    if length == len(RESULTS[task_id].items()):
-        SAVED_RESULTS[task_id] = [RESULTS[task_id][index] for index in sorted(RESULTS[task_id])]
-        STATUS[task_id] = 'SUCCESS'
-
-
 def service_web():
     static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
@@ -129,7 +110,7 @@ def service_zmq():
     receiver = context.socket(zmq.PULL)
     receiver.bind(config.SINK_URI)
     STREAM = zmqstream.ZMQStream(receiver)
-    STREAM.on_recv(collect_results)
+    STREAM.on_recv(gather)
 
 
 def start():

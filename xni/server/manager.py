@@ -17,7 +17,7 @@ import tornado.web
 
 from . import config
 from . import worker
-from .data import scatter, gather
+from .data import scatter, gather, get_status_json
 from ..align.interpolation import interp_position
 
 
@@ -77,8 +77,12 @@ class PathDirectoryHandler(BaseHandler):
 
 
 class TasksHandler(BaseHandler):
-    def get(self, task_id):
-        self.write('OK')
+    pass
+
+
+class StatusHandler(BaseHandler):
+    def get(self):
+        self.write(get_status_json())
 
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
@@ -92,10 +96,11 @@ def service_web():
     app = tornado.web.Application(
         [
             (r'/', MainHandler),
-            (r'/api/v1/shift/', ShiftHandler),
             (r'/api/v1/path/files/', PathFilesHandler),
             (r'/api/v1/path/directory/', PathDirectoryHandler),
-            (r'/api/v1/tasks/(.*)', TasksHandler),
+            (r'/api/v1/tasks/', TasksHandler),
+            (r'/api/v1/tasks/shift/', ShiftHandler),
+            (r'/api/v1/tasks/status.json', StatusHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )

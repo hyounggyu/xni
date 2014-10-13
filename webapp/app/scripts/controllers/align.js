@@ -8,12 +8,22 @@
  * Controller of the xniApp
  */
 angular.module('xniApp')
-    .controller('AlignCtrl', function ($scope, $http) {
+    .controller('AlignCtrl', function ($scope, $http, $timeout) {
         $scope.awesomeThings = [
             'HTML5 Boilerplate',
             'AngularJS',
             'Karma'
         ];
+        var updateStatus = function() {
+            $http({method: 'GET', url: '/api/v1/tasks/status.json'}).
+                success(function(data, status) {
+                    $scope.response = data;
+                }).
+                error(function(data, status) {
+                    $scope.response = data;
+                });
+            $timeout(updateStatus, 1000);
+        };
         $scope.check_pattern = function() {
             $http({method: 'POST', url: '/api/v1/path/files/', params: {
                 pattern: $scope.imfiles
@@ -37,7 +47,7 @@ angular.module('xniApp')
                 })
         };
         $scope.shift = function() {
-            $http({method: 'POST', url: '/api/v1/shift/', params: {
+            $http({method: 'POST', url: '/api/v1/tasks/shift/', params: {
                 imfiles: $scope.imfiles,
                 destdir: $scope.destdir,
                 posdata: $scope.posdata
@@ -48,5 +58,6 @@ angular.module('xniApp')
                 error(function(data, status) {
                     $scope.response = data
                 });
+            updateStatus();
         };
     });

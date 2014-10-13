@@ -1,9 +1,10 @@
 import uuid
 import pickle
+import json
 
 from . import tasks
 
-__all__ = ['scatter', 'gather']
+__all__ = ['scatter', 'gather', 'get_status_json']
 
 
 RESULTS = dict()
@@ -40,3 +41,10 @@ def gather(msg):
             final = getattr(tasks, task_final)
             final(RESULTS[task_id])
         STATUS[task_id] = 'SUCCESS'
+
+
+def get_status_json():
+    status = dict()
+    for key, value in STATUS.items():
+        status.update({str(key): value})
+    return json.dumps(status)

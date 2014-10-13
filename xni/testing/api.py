@@ -6,10 +6,11 @@ import params
 
 URI = 'http://127.0.0.1:8000'
 
-r = requests.post('http://127.0.0.1:8000/api/v1/tasks/shift/', params.params)
+#r = requests.post('http://127.0.0.1:8000/api/v1/tasks/shift/', params.params)
+r = requests.post('http://127.0.0.1:8000/api/v1/tasks/correlation/', params.params)
 print(r.status_code, r.text)
 
-for _ in range(30):
+for _ in range(120):
     r = requests.get('http://127.0.0.1:8000/api/v1/tasks/status.json')
     print(r.status_code, r.text)
     time.sleep(1)

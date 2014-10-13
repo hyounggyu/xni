@@ -20,6 +20,12 @@
 
 <div class="alert" role="alert">{{ directory_status }}</div>
 
+<h2>Calculate cross-correlation</h2>
+
+<span class="help-block">Blah Blah</span>
+<button type="button" class="btn btn-default" ng-click="correlation()">Start</button>
+
+
 <h2>Position based image shift</h2>
 
 <div class="form-group">
@@ -28,6 +34,6 @@
     <textarea id="inputPositionData" class="form-control" rows="7" ng-model="posdata"></textarea>
 </div>
 
-<button type="button" class="btn btn-default" ng-click='shift()'>Shift</button>
+<button type="button" class="btn btn-default" ng-click='shift()'>Start</button>
 
 <div class="alert" role="alert">{{ response }}</div>

@@ -57,6 +57,17 @@ class ShiftHandler(BaseHandler):
         self.write('OK')
 
 
+class CorrelationHandler(BaseHandler):
+    def post(self):
+        imfiles_pattern = self.get_argument('imfiles')
+
+        imfiles = glob.glob(imfiles_pattern)
+        args_list = [(imfiles[i-1], imfiles[i]) for i in range(1, len(imfiles))]
+        scatter(SENDER, 'correlation_image', args_list, 'correlation_image_final')
+
+        self.write('OK')
+
+
 class PathFilesHandler(BaseHandler):
     def post(self):
         pattern = self.get_argument('pattern')
@@ -100,6 +111,7 @@ def service_web():
             (r'/api/v1/path/directory/', PathDirectoryHandler),
             (r'/api/v1/tasks/', TasksHandler),
             (r'/api/v1/tasks/shift/', ShiftHandler),
+            (r'/api/v1/tasks/correlation/', CorrelationHandler),
             (r'/api/v1/tasks/status.json', StatusHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],

@@ -60,4 +60,16 @@ angular.module('xniApp')
                 });
             updateStatus();
         };
+        $scope.correlation = function() {
+            $http({method: 'POST', url: '/api/v1/tasks/correlation/', params: {
+                imfiles: $scope.imfiles
+            }}).
+                success(function(data, status) {
+                    $scope.response = data
+                }).
+                error(function(data, status) {
+                    $scope.response = data
+                });
+            updateStatus();
+        };
     });

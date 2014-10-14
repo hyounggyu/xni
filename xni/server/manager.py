@@ -17,7 +17,7 @@ import tornado.web
 
 from . import config
 from . import worker
-from .data import scatter, gather, get_status_json
+from .comm import scatter, gather, get_status_json
 from ..align.interpolation import interp_position
 
 

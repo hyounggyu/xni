@@ -2,31 +2,20 @@
     <h1>Alignment</h1>
 </div>
 
-<h2>Choose dataset</h2>
-
 <div class="form-group">
-    <label for="inputImageFilePattern">Input Image Files with pattern</label>
-    <span class="help-block">/full/path/with/pattern/prefix*.tiff (TIFF files)</span>
-    <input type="text" id="inputImageFilePattern" class="form-control" ng-model="imfiles" ng-change="check_pattern()">
+    <label for="SelectDataset">Select Dataset</label>
+    <select id="SelectDataset" class="form-control">
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+    </select>
 </div>
 
-<div class="alert" role="alert">{{ num_files }}</div>
-
 <div class="form-group">
-    <label for="inputDestinationDirectory">Input Destination Directory</label>
-    <span class="help-block">/full/path/</span>
-    <input type="text" id="inputDestinationDirectory" class="form-control" ng-model="destdir" ng-change="check_directory()">
+    <label>Calculate Cross-correlation</label>
+    <span class="help-block">Blah Blah</span>
+    <button type="button" class="btn btn-default" ng-click="correlation()">Start</button>
 </div>
-
-<div class="alert" role="alert">{{ directory_status }}</div>
-
-<h2>Calculate cross-correlation</h2>
-
-<span class="help-block">Blah Blah</span>
-<button type="button" class="btn btn-default" ng-click="correlation()">Start</button>
-
-
-<h2>Position based image shift</h2>
 
 <div class="form-group">
     <label for="inputPositionData">Input Position Data</label>

@@ -23,6 +23,10 @@ angular
                 templateUrl: 'views/main.html',
                 controller: 'MainCtrl'
             })
+            .when('/dataset', {
+                templateUrl: 'views/dataset.html',
+                controller: 'DatasetCtrl'
+            })
             .when('/align', {
                 templateUrl: 'views/align.html',
                 controller: 'AlignCtrl'

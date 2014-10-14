@@ -26,8 +26,7 @@ STREAM = None
 
 
 class BaseHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.write("Hello, world")
+    pass
 
 
 class MainHandler(BaseHandler):

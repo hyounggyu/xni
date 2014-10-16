@@ -18,7 +18,7 @@ import tornado.web
 
 from . import config
 from . import worker
-from .comm import scatter, gather, get_status_json
+from .communicator import scatter, gather, get_status_json
 from .datasets import find_dataset
 from ..align.interpolation import interp_position
 

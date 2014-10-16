@@ -1,6 +1,7 @@
 import os
 import csv
 import glob
+import json
 import multiprocessing
 import webbrowser
 
@@ -18,6 +19,7 @@ import tornado.web
 from . import config
 from . import worker
 from .comm import scatter, gather, get_status_json
+from .datasets import find_dataset
 from ..align.interpolation import interp_position
 
 
@@ -67,23 +69,14 @@ class CorrelationHandler(BaseHandler):
         self.write('OK')
 
 
-class PathFilesHandler(BaseHandler):
-    def post(self):
-        pattern = self.get_argument('pattern')
-
-        files = glob.glob(pattern)
-        self.write('{} files'.format(len(files)))
-
-
-class PathDirectoryHandler(BaseHandler):
-    def post(self):
-        path = self.get_argument('directory')
-
-        if os.path.isdir(path):
-            self.write('OK')
-        else:
+class DatasetHandler(BaseHandler):
+    def get(self):
+        datasets = find_dataset()
+        if len(datasets) == 0:
             self.set_status(404)
-            self.write('Could not find directory')
+            self.write('Could not find datasets')
+        else:
+            self.write(json.dumps(datasets))
 
 
 class TasksHandler(BaseHandler):
@@ -106,8 +99,7 @@ def service_web():
     app = tornado.web.Application(
         [
             (r'/', MainHandler),
-            (r'/api/v1/path/files/', PathFilesHandler),
-            (r'/api/v1/path/directory/', PathDirectoryHandler),
+            (r'/api/v1/datasets/', DatasetHandler),
             (r'/api/v1/tasks/', TasksHandler),
             (r'/api/v1/tasks/shift/', ShiftHandler),
             (r'/api/v1/tasks/correlation/', CorrelationHandler),

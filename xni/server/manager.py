@@ -123,14 +123,12 @@ def service_zmq():
 
 def start():
     print('Start XNI manager...')
-    if True:
-        nproc = multiprocessing.cpu_count() if multiprocessing.cpu_count() < 8 else 8
-        for i in range(nproc):
-            multiprocessing.Process(target=worker.start).start()
+    nproc = multiprocessing.cpu_count() if multiprocessing.cpu_count() < 8 else 8
+    for i in range(nproc):
+        multiprocessing.Process(target=worker.start).start()
     service_zmq()
     service_web()
-    if False:
-        webbrowser.open_new(config.WEBSERVER_URI)
+    webbrowser.open_new(config.WEBSERVER_URI)
     try:
         ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:

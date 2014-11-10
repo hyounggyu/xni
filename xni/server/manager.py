@@ -19,7 +19,7 @@ import tornado.web
 from . import config
 from . import worker
 from .communicator import scatter, gather, get_status_json
-from .datasets import find_dataset
+from .datasets import *
 from ..align.interpolation import interp_position
 
 
@@ -77,6 +77,17 @@ class DatasetHandler(BaseHandler):
             self.write('Could not find datasets')
         else:
             self.write(json.dumps(datasets))
+
+    def post(self):
+        name = self.get_argument('name')
+        projections = self.request.files['projections']
+        create_dataset(name, projections)
+        self.write('OK')
+
+    def delete(self):
+        name = self.get_argument('name')
+        remove_dataset(name)
+        self.write('OK')
 
 
 class TasksHandler(BaseHandler):

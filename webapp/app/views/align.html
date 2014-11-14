@@ -2,6 +2,8 @@
     <h1>Alignment</h1>
 </div>
 
+<div class="alert alert-info" role="alert" ng-hide="alert_message">{{ response }}</div>
+
 <div class="form-group">
     <label for="SelectDataset">Select Dataset</label>
     <select id="SelectDataset" class="form-control">
@@ -23,6 +25,6 @@
     <textarea id="inputPositionData" class="form-control" rows="7" ng-model="posdata"></textarea>
 </div>
 
-<button type="button" class="btn btn-default" ng-click='shift()'>Start</button>
-
-<div class="alert" role="alert">{{ response }}</div>
+<div class="form-group">
+    <button type="button" class="btn btn-default" ng-click="shift()">Start</button>
+</div>

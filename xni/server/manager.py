@@ -28,7 +28,8 @@ STREAM = None
 
 
 class BaseHandler(tornado.web.RequestHandler):
-    pass
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
 
 
 class MainHandler(BaseHandler):

@@ -14,62 +14,24 @@ angular.module('xniApp')
             'AngularJS',
             'Karma'
         ];
-        var updateStatus = function() {
-            $http({method: 'GET', url: '/api/v1/tasks/status.json'}).
-                success(function(data, status) {
-                    $scope.response = data;
-                }).
-                error(function(data, status) {
-                    $scope.response = data;
-                });
-            $timeout(updateStatus, 1000);
-        };
-        $scope.check_pattern = function() {
-            $http({method: 'POST', url: '/api/v1/path/files/', params: {
-                pattern: $scope.imfiles
-            }}).
-                success(function(data, status) {
-                    $scope.num_files = data;
-                }).
-                error(function(data, status) {
-                    $scope.num_files = data;
-                })
-        };
-        $scope.check_directory = function() {
-            $http({method: 'POST', url: '/api/v1/path/directory/', params: {
-                directory: $scope.destdir
-            }}).
-                success(function(data, status) {
-                    $scope.directory_status = data;
-                }).
-                error(function(data, status) {
-                    $scope.directory_status = data;
-                })
+        var server_url = 'http://127.0.0.1:8000';
+        $scope.alert_message = true;
+        var updateResponse = function(data, status) {
+            $scope.alert_message = false;
+            console.log(data);
+            $scope.response = data;
+            $timeout(function () { $scope.alert_message = true }, 3000)
         };
         $scope.shift = function() {
-            $http({method: 'POST', url: '/api/v1/tasks/shift/', params: {
+            $http({method: 'POST', url: server_url+'/api/v1/tasks/shift/', params: {
                 imfiles: $scope.imfiles,
                 destdir: $scope.destdir,
                 posdata: $scope.posdata
-            }}).
-                success(function(data, status) {
-                    $scope.response = data
-                }).
-                error(function(data, status) {
-                    $scope.response = data
-                });
-            updateStatus();
+            }}).success(updateResponse).error(updateResponse);
         };
         $scope.correlation = function() {
-            $http({method: 'POST', url: '/api/v1/tasks/correlation/', params: {
+            $http({method: 'POST', url: server_url+'/api/v1/tasks/correlation/', params: {
                 imfiles: $scope.imfiles
-            }}).
-                success(function(data, status) {
-                    $scope.response = data
-                }).
-                error(function(data, status) {
-                    $scope.response = data
-                });
-            updateStatus();
+            }}).success(updateResponse).error(updateResponse);
         };
     });

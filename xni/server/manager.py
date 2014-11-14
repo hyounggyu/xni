@@ -114,7 +114,7 @@ def service_web():
             (r'/api/v1/tasks/', TasksHandler),
             (r'/api/v1/tasks/shift/', ShiftHandler),
             (r'/api/v1/tasks/correlation/', CorrelationHandler),
-            (r'/api/v1/tasks/status.json', StatusHandler),
+            (r'/api/v1/status/', StatusHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )

@@ -31,6 +31,10 @@ angular
                 templateUrl: 'views/align.html',
                 controller: 'AlignCtrl'
             })
+            .when('/status', {
+                templateUrl: 'views/status.html',
+                controller: 'StatusCtrl'
+            })
             .otherwise({
                 redirectTo: '/'
             });

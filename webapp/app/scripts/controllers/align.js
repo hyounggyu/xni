@@ -8,10 +8,13 @@
  * Controller of the xniApp
  */
 angular.module('xniApp')
-  .controller('AlignCtrl', function ($scope) {
+  .controller('AlignCtrl', function ($scope, Dataset) {
     $scope.awesomeThings = [
       'HTML5 Boilerplate',
       'AngularJS',
       'Karma'
     ];
+    Dataset.query(function(data) {
+      $scope.datasets = data;
+    });
   });

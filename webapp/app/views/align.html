@@ -7,9 +7,7 @@
 <div class="form-group">
     <label for="SelectDataset">Select Dataset</label>
     <select id="SelectDataset" class="form-control">
-        <option>1</option>
-        <option>2</option>
-        <option>3</option>
+        <option ng-repeat="dataset in datasets">{{ dataset.name }}</option>
     </select>
 </div>
 

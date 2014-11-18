@@ -15,7 +15,7 @@ angular.module('xniApp')
             'Karma'
         ];
         var server_url = 'http://127.0.0.1:8000';
-        var dataset = $resource(server_url+'/v1/dataset/:datasetName', {datasetName: '@name'});
+        var dataset = $resource(server_url+'/api/v1/dataset/:datasetName', {datasetName: '@name'});
         dataset.query(function(data) {
             $scope.datasets = data;
         });

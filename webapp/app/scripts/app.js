@@ -23,17 +23,17 @@ angular
                 templateUrl: 'views/main.html',
                 controller: 'MainCtrl'
             })
-            .when('/dataset', {
-                templateUrl: 'views/dataset.html',
-                controller: 'DatasetCtrl'
-            })
             .when('/align', {
-                templateUrl: 'views/align.html',
-                controller: 'AlignCtrl'
+              templateUrl: 'views/align.html',
+              controller: 'AlignCtrl'
+            })
+            .when('/dataset', {
+              templateUrl: 'views/dataset.html',
+              controller: 'DatasetCtrl'
             })
             .when('/status', {
-                templateUrl: 'views/status.html',
-                controller: 'StatusCtrl'
+              templateUrl: 'views/status.html',
+              controller: 'StatusCtrl'
             })
             .otherwise({
                 redirectTo: '/'

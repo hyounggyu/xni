@@ -71,13 +71,16 @@ class CorrelationHandler(BaseHandler):
 
 
 class DatasetHandler(BaseHandler):
-    def get(self):
-        datasets = find_dataset()
-        if len(datasets) == 0:
-            self.set_status(404)
-            self.write('Could not find datasets')
+    def get(self, dataset_name=None):
+        if dataset_name == None or dataset_name == '':
+            datasets = list_datasets()
+            if len(datasets) == 0:
+                self.set_status(404)
+                self.write('Could not find datasets')
+            else:
+                self.write(json.dumps(datasets))
         else:
-            self.write(json.dumps(datasets))
+            self.write('OK')
 
     def post(self):
         name = self.get_argument('name')
@@ -111,11 +114,12 @@ def service_web():
     app = tornado.web.Application(
         [
             (r'/', MainHandler),
-            (r'/api/v1/datasets/', DatasetHandler),
-            (r'/api/v1/tasks/', TasksHandler),
-            (r'/api/v1/tasks/shift/', ShiftHandler),
-            (r'/api/v1/tasks/correlation/', CorrelationHandler),
-            (r'/api/v1/status/', StatusHandler),
+            (r'/v1/dataset$', DatasetHandler),
+            (r'/v1/dataset/(.*)', DatasetHandler),
+            (r'/v1/tasks/', TasksHandler),
+            (r'/v1/tasks/shift/', ShiftHandler),
+            (r'/v1/tasks/correlation/', CorrelationHandler),
+            (r'/v1/status/', StatusHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )

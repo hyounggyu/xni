@@ -9,26 +9,23 @@ from ..io.tifffile import *
 from . import config
 
 
-__all__ = ['find_dataset', 'create_dataset', 'remove_dataset']
+__all__ = ['list_datasets', 'create_dataset', 'remove_dataset']
 
-def fetch_cache_dir(name=None):
-    if name == None:
-        return config.CACHE_DIR
+def fetch_dataset_dir(name):
     return os.path.join(config.CACHE_DIR, name+'.xni')
 
 
-def find_dataset():
-    cache = fetch_cache_dir()
+def list_datasets():
     datasets = []
-    list = glob.glob1(cache, '*.xni')
+    list = glob.glob1(config.CACHE_DIR, '*.xni')
     for l in list:
-        if os.path.isdir(os.path.join(cache, l)):
-            datasets.append(l[:-4])
+        if os.path.isdir(os.path.join(config.CACHE_DIR, l)):
+            datasets.append({'name': l[:-4]})
     return datasets
 
 
 def create_dataset(name, projections):
-    cache = fetch_cache_dir(name)
+    cache = fetch_dataset_dir(name)
     if os.path.exists(cache):
         raise Exception('Dataset already exists')
     else:
@@ -51,5 +48,5 @@ def create_dataset(name, projections):
 
 
 def remove_dataset(name):
-    cache = fetch_cache_dir(name)
+    cache = fetch_dataset_dir(name)
     shutil.rmtree(cache)

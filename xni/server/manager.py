@@ -2,29 +2,14 @@ import os
 import csv
 import glob
 import json
-import multiprocessing
 import webbrowser
 
-import zmq
-
-# https://github.com/ipython/ipython/blob/master/IPython/html/notebookapp.py
-# Install the pyzmq ioloop. This has to be done before anything else from
-# tornado is imported.
-from zmq.eventloop import ioloop
-from zmq.eventloop import zmqstream
-ioloop.install()
-
+import tornado.ioloop
 import tornado.web
 
 from . import config
-from . import worker
-from .communicator import scatter, gather, get_status_json
 from .datasets import *
 from ..align.interpolation import interp_position
-
-
-SENDER = None
-STREAM = None
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -54,7 +39,7 @@ class ShiftHandler(BaseHandler):
             return
 
         args_list = [(imfile, dy_, dx_, destdir) for imfile, dy_, dx_ in zip(imfiles, dy, dx)]
-        scatter(SENDER, 'shift_image', args_list)
+        #scatter(SENDER, 'shift_image', args_list)
 
         self.write('OK')
 
@@ -65,7 +50,7 @@ class CorrelationHandler(BaseHandler):
 
         imfiles = glob.glob(imfiles_pattern)
         args_list = [(imfiles[i-1], imfiles[i]) for i in range(1, len(imfiles))]
-        scatter(SENDER, 'correlation_image', args_list, 'correlation_image_final')
+        #scatter(SENDER, 'correlation_image', args_list, 'correlation_image_final')
 
         self.write('OK')
 
@@ -94,58 +79,26 @@ class DatasetHandler(BaseHandler):
         self.write('OK')
 
 
-class TasksHandler(BaseHandler):
-    pass
-
-
-class StatusHandler(BaseHandler):
-    def get(self):
-        self.write(get_status_json())
-
-
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
-def service_web():
+def start():
+    print('Start XNI manager...')
     static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
         [
             (r'/', MainHandler),
             (r'/api/v1/dataset$', DatasetHandler),
             (r'/api/v1/dataset/(.*)', DatasetHandler),
-            (r'/api/v1/tasks/', TasksHandler),
-            (r'/api/v1/tasks/shift/', ShiftHandler),
-            (r'/api/v1/tasks/correlation/', CorrelationHandler),
-            (r'/api/v1/status/', StatusHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )
-    app.listen(config.WEBSERVER_PORT)
-
-
-def service_zmq():
-    global SENDER, STREAM
-    context = zmq.Context()
-    SENDER = context.socket(zmq.PUSH)
-    SENDER.bind(config.VENTILATOR_URI)
-    receiver = context.socket(zmq.PULL)
-    receiver.bind(config.SINK_URI)
-    STREAM = zmqstream.ZMQStream(receiver)
-    STREAM.on_recv(gather)
-
-
-def start():
-    print('Start XNI manager...')
-    nproc = multiprocessing.cpu_count() if multiprocessing.cpu_count() < 8 else 8
-    for i in range(nproc):
-        multiprocessing.Process(target=worker.start).start()
-    service_zmq()
-    service_web()
-    webbrowser.open_new(config.WEBSERVER_URI)
+    app.listen(config.SERVER_PORT)
+    #webbrowser.open_new(config.SERVER_URI)
     try:
-        ioloop.IOLoop.instance().start()
+        tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         pass

@@ -12,13 +12,39 @@ from .datasets import *
 from ..align.interpolation import interp_position
 
 
+class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
+
 class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
 
-class MainHandler(BaseHandler):
-    pass
+class DatasetHandler(BaseHandler):
+    def get(self, dataset_name=None):
+        if dataset_name == None or dataset_name == '':
+            datasets = list_datasets()
+            if len(datasets) == 0:
+                self.set_status(404)
+                self.write('Could not find datasets')
+            else:
+                self.write(json.dumps(datasets))
+        else:
+            self.write('OK')
+
+    def post(self):
+        name = self.get_argument('name')
+        projections = self.request.files['projections']
+        create_dataset(name, projections)
+        self.write('OK')
+
+    def delete(self):
+        name = self.get_argument('name')
+        remove_dataset(name)
+        self.write('OK')
 
 
 class ShiftHandler(BaseHandler):
@@ -55,42 +81,11 @@ class CorrelationHandler(BaseHandler):
         self.write('OK')
 
 
-class DatasetHandler(BaseHandler):
-    def get(self, dataset_name=None):
-        if dataset_name == None or dataset_name == '':
-            datasets = list_datasets()
-            if len(datasets) == 0:
-                self.set_status(404)
-                self.write('Could not find datasets')
-            else:
-                self.write(json.dumps(datasets))
-        else:
-            self.write('OK')
-
-    def post(self):
-        name = self.get_argument('name')
-        projections = self.request.files['projections']
-        create_dataset(name, projections)
-        self.write('OK')
-
-    def delete(self):
-        name = self.get_argument('name')
-        remove_dataset(name)
-        self.write('OK')
-
-
-class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
-    def set_extra_headers(self, path):
-        # Disable cache
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
-
 def start():
     print('Start XNI manager...')
     static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
         [
-            (r'/', MainHandler),
             (r'/api/v1/dataset$', DatasetHandler),
             (r'/api/v1/dataset/(.*)', DatasetHandler),
             (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})

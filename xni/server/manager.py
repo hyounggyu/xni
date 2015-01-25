@@ -12,15 +12,8 @@ from .dataset import *
 from ..align.interpolation import interp_position
 
 
-class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
-    def set_extra_headers(self, path):
-        # Disable cache
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
-
 class BaseHandler(tornado.web.RequestHandler):
-    def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
+    pass
 
 
 class DatasetHandler(BaseHandler):
@@ -83,16 +76,13 @@ class CorrelationHandler(BaseHandler):
 
 def start():
     print('Start XNI manager...')
-    static_path = os.path.join(os.path.dirname(__file__), "html")
     app = tornado.web.Application(
         [
             (r'/api/v1/dataset$', DatasetHandler),
             (r'/api/v1/dataset/(.*)', DatasetHandler),
-            (r'/app/(.*)', NoCacheStaticFileHandler, {'path': static_path})
         ],
     )
     app.listen(config.SERVER_PORT)
-    #webbrowser.open_new(config.SERVER_URI)
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:

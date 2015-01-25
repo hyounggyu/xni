@@ -1,16 +1,20 @@
 (* ::Package:: *)
 
+(*:Mathematica Version: 10.0 *)
+
+(*:Package Version: 0.01*)
+
+(*:License: GPL*)
+
+(*:Name: Phantom3D` *)
+
+(*:Author: Hyounggyu Kim (khg@gist.ac.kr) *)
+
 BeginPackage["Phantom3D`"]
 
-Phantom3DRegion::usage = "Make Region
-Phantom3DRegion[phi]
-"
+Phantom3DRegion::usage = "Make Region"
 
-Phantom3DRegionToData::usage = "Region to Image
-range=Drop[Range[-1,1,0.02],-1];
-points=Table[{x,y,z},{x,range},{y,range},{z,range}];
-Phantom3DRegionToData[region,points]
-"
+Phantom3DRegionToData::usage = "Region to Image"
 
 Begin["`Private`"]
 

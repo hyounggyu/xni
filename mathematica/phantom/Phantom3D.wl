@@ -12,6 +12,8 @@
 
 BeginPackage["Phantom3D`"]
 
+Phantom3D::usage = "Phantom Head"
+
 Phantom3DRegion::usage = "Make Region"
 
 Phantom3DRegionToData::usage = "Region to Image"
@@ -19,6 +21,7 @@ Phantom3DRegionToData::usage = "Region to Image"
 Begin["`Private`"]
 
 head={
+	(* Coordinates of the center, Axis lengths(a,b,c), Euler angle phi(radian)*)
 	{{0,0,0},{0.69,0.92,0.9},0},
 	{{0,0,0},{0.6624,0.874,0.88},0},
 	{{-0.22,0,-0.25},{0.41,0.16,0.21},(3 Pi)/5},
@@ -31,12 +34,12 @@ head={
 	{{0,0.1,0.625},{0.056,0.056,0.1},Pi/2}
 };
 
+(* Gray levels *)
 rho={2.0,-0.8,-0.2,-0.2,0.2,0.2,0.1,0.1,0.2,-0.2};
 
-Phantom3DRegion[phi_]:=Module[{ellipsoid},
-	ellipsoid[center_?VectorQ, axislength_?VectorQ, angle_]:=Ellipsoid[center,RotationMatrix[angle,{0,0,1}].DiagonalMatrix@(axislength^2).Transpose@RotationMatrix[angle,{0,0,1}]];
-	Fold[TransformedRegion,#,{RotationTransform[phi,{0,0,1}],TranslationTransform[{0,0,0}]}]&/@(ellipsoid@@@head)
-]
+Phantom3D[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationMatrix[Pi-phi,{0,0,1}].DiagonalMatrix@(axislengths^2).Transpose@RotationMatrix[Pi-phi,{0,0,1}]]
+
+Phantom3DRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3D[])
 
 Phantom3DRegionToData[region_,points_]:=Module[{mf},
 	mf=RegionMember/@(region);
@@ -46,6 +49,9 @@ Phantom3DRegionToData[region_,points_]:=Module[{mf},
 End[]
 
 EndPackage[]
+
+
+
 
 
 

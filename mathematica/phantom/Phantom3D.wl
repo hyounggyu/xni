@@ -18,6 +18,8 @@ Phantom3DRegion::usage = "Make Region"
 
 Phantom3DRegionToData::usage = "Region to Image"
 
+Phantom3DRegionToImage3D::usage = "Region to Image3D"
+
 Begin["`Private`"]
 
 head={
@@ -44,6 +46,14 @@ Phantom3DRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3D[])
 Phantom3DRegionToData[region_,points_]:=Module[{mf},
 	mf=RegionMember/@(region);
 	Plus@@(rho Boole@Through@mf@points)
+]
+
+Phantom3DRegionToImage3D[region_,n_]:=Module[{mf,range,points,image3ddata},
+	mf=RegionMember/@(region);
+	range=Range[-1.,1.,2./n];
+	If[Last@range==1.,range=Drop[range,-1]];
+	image3ddata=Image3D/@(Boole@Through@mf@Table[{x,y,z},{x,range},{y,range},{z,range}]);
+	ImageApply[Plus,MapThread[ImageMultiply,{image3ddata,rho}]]
 ]
 
 End[]

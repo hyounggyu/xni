@@ -48,11 +48,12 @@ Phantom3DRegionToData[region_,points_]:=Module[{mf},
 	Plus@@(rho Boole@Through@mf@points)
 ]
 
-Phantom3DRegionToImage3D[region_,size_Integer]:=Module[{mf,range,points,image3ddata},
+Phantom3DRegionToImage3D[region_,size_Integer]:=Module[{mf,range,rrange,points,image3ddata},
 	mf=RegionMember/@(region);
 	range=Range[-1.,1.,2./size];
 	If[Last@range==1.,range=Drop[range,-1]];
-	image3ddata=Image3D/@(Boole@Through@mf@Table[{x,y,z},{x,range},{y,range},{z,range}]);
+	rrange=Reverse@range;
+	image3ddata=Image3D/@(Boole@Through@mf@Table[{x,y,z},{z,rrange},{y,rrange},{x,range}]);
 	ImageApply[Plus,MapThread[ImageMultiply,{image3ddata,rho}]]
 ]
 

@@ -39,7 +39,7 @@ head={
 (* Gray levels *)
 rho={2.0,-0.8,-0.2,-0.2,0.2,0.2,0.1,0.1,0.2,-0.2};
 
-Phantom3D[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationMatrix[Pi-phi,{0,0,1}].DiagonalMatrix@(axislengths^2).Transpose@RotationMatrix[Pi-phi,{0,0,1}]]
+Phantom3D[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationMatrix[phi,{0,0,1}].DiagonalMatrix@(axislengths^2).Transpose@RotationMatrix[phi,{0,0,1}]]
 
 Phantom3DTransformedRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3D[])
 

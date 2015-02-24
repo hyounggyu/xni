@@ -14,7 +14,7 @@ BeginPackage["Phantom3D`"]
 
 Phantom3D::usage = "Phantom Head"
 
-Phantom3DRegion::usage = "Make Region"
+Phantom3DTransformedRegion::usage = "Make Region"
 
 Phantom3DRegionToData::usage = "Region to Image"
 
@@ -41,7 +41,7 @@ rho={2.0,-0.8,-0.2,-0.2,0.2,0.2,0.1,0.1,0.2,-0.2};
 
 Phantom3D[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationMatrix[Pi-phi,{0,0,1}].DiagonalMatrix@(axislengths^2).Transpose@RotationMatrix[Pi-phi,{0,0,1}]]
 
-Phantom3DRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3D[])
+Phantom3DTransformedRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3D[])
 
 Phantom3DRegionToData[region_,points_]:=Module[{mf},
 	mf=RegionMember/@(region);

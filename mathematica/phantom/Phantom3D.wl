@@ -12,9 +12,11 @@
 
 BeginPackage["Phantom3D`"]
 
-Phantom3D::usage = "Phantom Head"
+Phantom3DRegion::usage = "Phantom Head Region"
 
-Phantom3DTransformedRegion::usage = "Make Region"
+Phantom3DTransformedRegion::usage = "Transformed Region"
+
+Phantom3DGridPoints::usage = "Grid Points"
 
 Phantom3DRegionToData::usage = "Region to Image"
 
@@ -39,21 +41,24 @@ head={
 (* Gray levels *)
 rho={2.0,-0.8,-0.2,-0.2,0.2,0.2,0.1,0.1,0.2,-0.2};
 
-Phantom3D[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationMatrix[phi,{0,0,1}].DiagonalMatrix@(axislengths^2).Transpose@RotationMatrix[phi,{0,0,1}]]
+Phantom3DRegion[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationMatrix[phi,{0,0,1}].DiagonalMatrix@(axislengths^2).Transpose@RotationMatrix[phi,{0,0,1}]]
 
-Phantom3DTransformedRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3D[])
+Phantom3DTransformedRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3DRegion[])
+
+Phantom3DGridPoints[size_Integer]:=Module[{range},
+	range=Range[-1.,1.,2./size];
+	If[Last@range==1.,range=Drop[range,-1]];
+	Table[{x,y,z},{z,Reverse@range},{y,Reverse@range},{x,range}]
+]
 
 Phantom3DRegionToData[region_,points_]:=Module[{mf},
 	mf=RegionMember/@(region);
 	Plus@@(rho Boole@Through@mf@points)
 ]
 
-Phantom3DRegionToImage3D[region_,size_Integer]:=Module[{mf,range,rrange,points,image3ddata},
+Phantom3DRegionToImage3D[region_,size_Integer]:=Module[{mf,range,rrange,image3ddata},
 	mf=RegionMember/@(region);
-	range=Range[-1.,1.,2./size];
-	If[Last@range==1.,range=Drop[range,-1]];
-	rrange=Reverse@range;
-	image3ddata=Image3D/@(Boole@Through@mf@Table[{x,y,z},{z,rrange},{y,rrange},{x,range}]);
+	image3ddata=Image3D/@(Boole@Through@mf@Phantom3DGridPoints[size]);
 	ImageApply[Plus,MapThread[ImageMultiply,{image3ddata,rho}]]
 ]
 

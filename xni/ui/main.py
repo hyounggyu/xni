@@ -4,6 +4,8 @@ import sys
 
 from PyQt4 import QtGui
 
+from view import ViewWindow
+
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
@@ -12,15 +14,23 @@ class MainWindow(QtGui.QMainWindow):
 
     def initUI(self):
 
-        fileOpen = QtGui.QAction('Open...', self)
+        openAction = QtGui.QAction('Open Dataset', self)
+        openAction.triggered.connect(self.showViewWindow)
+        newAction = QtGui.QAction('New Dataset', self)
 
         fileMenu = QtGui.QMenu("File", self)
-
-        fileMenu.addAction(fileOpen)
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(newAction)
 
         self.menuBar().addMenu(fileMenu)
+
+        self.statusBar().showMessage('Ready')
         self.setGeometry(300, 300, 300, 300)
         self.setWindowTitle('XNI')
+
+    def showViewWindow(self):
+        self.viewwindow = ViewWindow(self)
+        self.viewwindow.show()
 
 
 class App(QtGui.QApplication):

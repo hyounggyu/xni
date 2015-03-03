@@ -11,14 +11,16 @@ class MainWindow(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):
+
+        fileOpen = QtGui.QAction('Open...', self)
+
+        fileMenu = QtGui.QMenu("File", self)
+
+        fileMenu.addAction(fileOpen)
+
+        self.menuBar().addMenu(fileMenu)
+        self.setGeometry(300, 300, 300, 300)
         self.setWindowTitle('XNI')
-
-        self.newDatasetBtn = QtGui.QPushButton('New Dataset')
-
-        centralWidget = QtGui.QWidget(self)
-        vbox = QtGui.QVBoxLayout(centralWidget)
-        vbox.addWidget(self.newDatasetBtn)
-        self.setCentralWidget(centralWidget)
 
 
 class App(QtGui.QApplication):

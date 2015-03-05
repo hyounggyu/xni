@@ -8,6 +8,7 @@ import numpy as np
 
 
 class ViewWindow(QtGui.QMainWindow):
+
     def __init__(self, parent=None):
         super(ViewWindow, self).__init__(parent)
         self.initUI()

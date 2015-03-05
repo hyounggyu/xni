@@ -6,6 +6,7 @@ from PyQt4 import QtGui, uic
 
 from view import ViewWindow
 
+
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
@@ -33,6 +34,7 @@ class App(QtGui.QApplication):
 
     def bye(self):
         self.exit(0)
+
 
 if __name__ == '__main__':
     global app

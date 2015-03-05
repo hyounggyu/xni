@@ -2,7 +2,7 @@
 
 import sys
 
-from PyQt4 import QtGui
+from PyQt4 import QtGui, uic
 
 from view import ViewWindow
 
@@ -13,24 +13,12 @@ class MainWindow(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):
-
-        openAction = QtGui.QAction('Open Dataset', self)
-        openAction.triggered.connect(self.showViewWindow)
-        newAction = QtGui.QAction('New Dataset', self)
-
-        fileMenu = QtGui.QMenu("File", self)
-        fileMenu.addAction(openAction)
-        fileMenu.addAction(newAction)
-
-        self.menuBar().addMenu(fileMenu)
-
-        self.statusBar().showMessage('Ready')
-        self.setGeometry(300, 300, 300, 300)
-        self.setWindowTitle('XNI')
+        uic.loadUi('mainwindow.ui', self)
+        self.viewButton.clicked.connect(self.showViewWindow)
 
     def showViewWindow(self):
-        self.viewwindow = ViewWindow(self)
-        self.viewwindow.show()
+        viewwindow = ViewWindow(self)
+        viewwindow.show()
 
 
 class App(QtGui.QApplication):

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 
 from PyQt4 import QtGui, uic
 
-from view import ViewWindow
+from .view import ViewWindow
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -14,7 +15,7 @@ class MainWindow(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):
-        uic.loadUi('mainwindow.ui', self)
+        uic.loadUi(os.path.join('xni', 'ui', 'mainwindow.ui'), self)
         self.viewButton.clicked.connect(self.showViewWindow)
 
     def showViewWindow(self):
@@ -36,7 +37,7 @@ class App(QtGui.QApplication):
         self.exit(0)
 
 
-if __name__ == '__main__':
+def start():
     global app
     app = App(sys.argv)
     sys.exit(app.exec_())

@@ -5,13 +5,13 @@ import sys
 
 from PyQt4 import QtGui, uic
 
-from .view import ViewWindow
-
+from ..dataset.dataset import Dataset
 
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+        self.dataset = Dataset()
         self.initUI()
 
     def initUI(self):
@@ -20,8 +20,9 @@ class MainWindow(QtGui.QMainWindow):
         self.viewButton.clicked.connect(self.showViewWindow)
 
     def showViewWindow(self):
-        viewwindow = ViewWindow(self)
-        viewwindow.show()
+        self.dataset.show(self)
+        #viewwindow = ViewWindow(self)
+        #viewwindow.show()
 
     def openDataset(self):
         fn = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')

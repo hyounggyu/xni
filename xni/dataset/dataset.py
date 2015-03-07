@@ -19,7 +19,7 @@ from scipy.ndimage.interpolation import shift
 
 from skimage.transform import iradon
 
-from ..io.tifffile import *
+from .tifffile import *
 from ..align import correlation
 
 

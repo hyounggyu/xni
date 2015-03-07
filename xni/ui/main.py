@@ -16,13 +16,14 @@ class MainWindow(QtGui.QMainWindow):
 
     def initUI(self):
         uic.loadUi(os.path.join('xni', 'ui', 'mainwindow.ui'), self)
-        self.openButton.clicked.connect(self.openDataset)
+        self.openButton.clicked.connect(self.show2ViewWindow)
         self.viewButton.clicked.connect(self.showViewWindow)
 
     def showViewWindow(self):
         self.dataset.show(self)
-        #viewwindow = ViewWindow(self)
-        #viewwindow.show()
+
+    def show2ViewWindow(self):
+        self.dataset.show2(self)
 
     def openDataset(self):
         fn = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')

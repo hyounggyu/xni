@@ -7,27 +7,31 @@ from PyQt4 import QtGui, uic
 
 from ..dataset.dataset import Dataset
 
+from .progress import progressWindow
+
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.dataset = Dataset()
+        self.d = Dataset()
         self.initUI()
 
     def initUI(self):
         uic.loadUi(os.path.join('xni', 'ui', 'mainwindow.ui'), self)
-        self.openButton.clicked.connect(self.show2ViewWindow)
+        self.openButton.clicked.connect(self.openDataset)
+        self.reconButton.clicked.connect(self.reconDataset)
         self.viewButton.clicked.connect(self.showViewWindow)
 
     def showViewWindow(self):
-        self.dataset.show(self)
-
-    def show2ViewWindow(self):
-        self.dataset.show2(self)
+        self.d.show(self)
 
     def openDataset(self):
         fn = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')
 
+    def reconDataset(self):
+        async_result = self.d.recon()
+        progressWindow(async_result, parent=self)
+        #self.statusBar().showMessage('Done')
 
 class App(QtGui.QApplication):
 

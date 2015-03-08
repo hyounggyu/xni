@@ -42,7 +42,7 @@ class Dataset:
 
     def recon(self):
         # self.result = recon_image.map([self.image[:,i,:].T for i in range(self.image.shape[1])])
-        self.result = recon_image.map([self.image[:,i,:].T for i in range(20)])
+        self.result = recon_image.map([self.image[:,i,:].T for i in range(250)])
         return self.result
 
     def show(self, parent=None):
@@ -53,6 +53,8 @@ class Dataset:
         win.setWindowTitle('pyqtgraph example: ImageView')
         win.show()
 
+    def update(self):
+        self.image = np.array(self.result.get())
 
 # shift(im, (dy, dx)
 # dy, dx = correlation.ccorr2d(ref, trans)

@@ -23,15 +23,17 @@ class MainWindow(QtGui.QMainWindow):
         self.viewButton.clicked.connect(self.showViewWindow)
 
     def showViewWindow(self):
+        self.d.update()
         self.d.show(self)
 
     def openDataset(self):
         fn = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')
 
     def reconDataset(self):
-        async_result = self.d.recon()
-        progressWindow(async_result, parent=self)
+        self.async_result = self.d.recon()
+        progressWindow(self.async_result, parent=self)
         #self.statusBar().showMessage('Done')
+
 
 class App(QtGui.QApplication):
 

@@ -12,26 +12,30 @@ from .progress import progressWindow
 
 class MainWindow(QtGui.QMainWindow):
 
+    dataset = None
+
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.d = Dataset()
         self.initUI()
 
     def initUI(self):
         uic.loadUi(os.path.join('xni', 'ui', 'mainwindow.ui'), self)
-        self.openButton.clicked.connect(self.openDataset)
         self.reconButton.clicked.connect(self.reconDataset)
         self.viewButton.clicked.connect(self.showViewWindow)
+        self.actionOpen.triggered.connect(self.openDataset)
 
     def showViewWindow(self):
-        self.d.update()
-        self.d.show(self)
+        self.dataset.update()
+        self.dataset.show(self)
 
     def openDataset(self):
-        fn = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')
+        filename = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')
+        self.dataset = Dataset(filename)
+        # attrs expetion
+        self.labelDatasetName.setText(self.dataset.name)
 
     def reconDataset(self):
-        self.async_result = self.d.recon()
+        self.async_result = self.dataset.recon()
         progressWindow(self.async_result, parent=self)
         #self.statusBar().showMessage('Done')
 

@@ -30,10 +30,12 @@ def swap(im):
     else:
         return None
 
+
 @lv.parallel()
 def recon_image(im):
     from skimage.transform import iradon
     return iradon(im, circle=True)
+
 
 class Dataset:
 

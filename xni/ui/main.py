@@ -9,6 +9,7 @@ from ..dataset.dataset import Dataset
 
 from .progress import progressWindow
 
+
 class MainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):

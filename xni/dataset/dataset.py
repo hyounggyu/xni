@@ -1,12 +1,14 @@
-import os
+# -*- coding: utf-8 -*-
+
+import sys
 
 from IPython.parallel import Client
 
 try:
     rc = Client()
     lv = rc.load_balanced_view()
-except:
-    print('Akkkkk')
+except FileNotFoundError:
+    sys.exit("Could not find IPython worker processes")
 
 from PyQt4 import QtGui
 import pyqtgraph as pg

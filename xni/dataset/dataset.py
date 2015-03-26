@@ -10,22 +10,11 @@ try:
 except FileNotFoundError:
     sys.exit("Could not find IPython worker processes")
 
-from PyQt4 import QtGui
-import pyqtgraph as pg
+
 import numpy as np
 import h5py
 
-from .tifffile import *
 from ..align import correlation
-
-
-def swap(im):
-    if im.ndim == 2:
-        return np.swapaxes(im, 0, 1)
-    elif im.ndim == 3:
-        return np.swapaxes(im, 1, 2)
-    else:
-        return None
 
 
 @lv.parallel()
@@ -36,26 +25,29 @@ def recon_image(im):
 
 class Dataset:
 
+    name = None
+    origin = None
+    recon = None
+    nslice = None
+
     def __init__(self, filename):
         self.fd = h5py.File(filename,'r')
         self.name = self.fd['/'].attrs['name'].decode()
         self.origin = self.fd['original'][:]
-        self.image = self.origin
+        self.nslice = self.origin.shape[1]
 
-    def recon(self):
-        self.result = recon_image.map([self.image[:,i,:].T for i in range(self.image.shape[1])])
+    def recon_async(self):
+        self.result = recon_image.map([self.origin[:,i,:].T for i in range(self.origin.shape[1])])
         return self.result
 
-    def show(self, parent=None):
-        win = QtGui.QMainWindow(parent)
-        imv = pg.ImageView()
-        imv.setImage(swap(self.image))
-        win.setCentralWidget(imv)
-        win.setWindowTitle('pyqtgraph example: ImageView')
-        win.show()
+    def recon_sync(self, slice_number):
+        self.result = recon_image.map([self.origin[:,slice_number,:].T])
+        self.result.wait()
+        self.recon = self.result.get()[0]
 
     def update(self):
         self.image = np.array(self.result.get())
+
 
 # shift(im, (dy, dx)
 # dy, dx = correlation.ccorr2d(ref, trans)

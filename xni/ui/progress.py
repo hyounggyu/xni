@@ -5,7 +5,7 @@ import os
 from PyQt4 import QtGui, QtCore, uic
 
 
-class progressWindow(QtGui.QMainWindow):
+class ProgressWindow(QtGui.QMainWindow):
 
     step = 0
 

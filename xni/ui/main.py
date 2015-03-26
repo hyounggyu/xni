@@ -8,13 +8,10 @@ from PyQt4 import QtGui, uic
 
 from ..dataset.dataset import Dataset
 
-from .progress import progressWindow
-
+from .progress import ProgressWindow
+from .imageview import ImageViewWindow
 
 dataset = None
-
-def open_dataset(filename):
-    return Dataset(filename)
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -25,25 +22,53 @@ class MainWindow(QtGui.QMainWindow):
 
     def initUI(self):
         uic.loadUi(os.path.join('xni', 'ui', 'mainwindow.ui'), self)
-        self.reconButton.clicked.connect(self.reconDataset)
-        self.viewButton.clicked.connect(self.showViewWindow)
-        self.actionOpen.triggered.connect(self.openDataset)
-        if dataset is not None:
-            self.labelDatasetName.setText(dataset.name)
 
-    def showViewWindow(self):
-        dataset.update()
-        dataset.show(self)
+        self.allsliceRadioButton.toggled.connect(self.disableSliceNumberSlider)
+        self.onesliceRadioButton.toggled.connect(self.enableSliceNumberSlider)
+        self.slicenumberSlider.valueChanged.connect(self.changedSliceNumberSlider)
+
+        self.reconrunButton.clicked.connect(self.reconRun)
+        self.reconviewButton.clicked.connect(self.reconView)
+
+        self.actionOpen.triggered.connect(self.openDataset)
+
+        if dataset is not None:
+            self.updateUI()
+
+    def updateUI(self):
+        self.labelDatasetName.setText(dataset.name)
+        self.slicenumberSlider.setMaximum(dataset.nslice)
+        self.reconrunButton.setEnabled(True)
 
     def openDataset(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, caption='Select file')
-        dataset = open_dataset(filename)
-        self.labelDatasetName.setText(dataset.name)
+        dataset = Dataset(filename)
+        self.updateUI()
 
-    def reconDataset(self):
-        self.async_result = dataset.recon()
-        progressWindow(self.async_result, parent=self)
-        #self.statusBar().showMessage('Done')
+    def reconRun(self):
+        if self.onesliceRadioButton.isChecked():
+            slice_number = self.slicenumberSlider.value()
+            dataset.recon_sync(slice_number)
+            self.reconviewButton.setEnabled(True)
+        elif self.allsliceRadioButton.isChecked():
+            self.async_result = dataset.recon()
+            ProgressWindow(self.async_result, parent=self)
+        else:
+            pass
+
+        self.statusBar().showMessage('Done')
+
+    def reconView(self):
+        ImageViewWindow(dataset.recon, parent=self)
+
+    def disableSliceNumberSlider(self):
+        self.slicenumberSlider.setEnabled(False)
+
+    def enableSliceNumberSlider(self):
+        self.slicenumberSlider.setEnabled(True)
+
+    def changedSliceNumberSlider(self, slice_number):
+        self.slicenumberLineEdit.setText(str(slice_number))
 
 
 class App(QtGui.QApplication):
@@ -78,7 +103,7 @@ def start():
             sys.exit()
         elif o in ('-i', '--input'):
             try:
-                dataset = open_dataset(a)
+                dataset = Dataset(a)
             except OSError as err:
                 print(err)
                 sys.exit(2)

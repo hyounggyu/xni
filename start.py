@@ -1,4 +1,4 @@
-from xni.ui.main import start
+from xni.ui import main
 
 if __name__ == '__main__':
-    start()
+    main.start()

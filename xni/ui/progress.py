@@ -10,8 +10,7 @@ class ProgressWindow(QtGui.QMainWindow):
     step = 0
 
     def __init__(self, async_result, parent=None):
-        super(progressWindow, self).__init__(parent)
-
+        super(ProgressWindow, self).__init__(parent)
         self.parent = parent
         self.ar = async_result
         self.initUI()

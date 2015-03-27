@@ -9,10 +9,11 @@ class ProgressWindow(QtGui.QMainWindow):
 
     step = 0
 
-    def __init__(self, async_result, parent=None):
+    def __init__(self, dataset, parent=None):
         super(ProgressWindow, self).__init__(parent)
         self.parent = parent
-        self.ar = async_result
+        self.dataset = dataset
+        self.ar = dataset.async_result
         self.initUI()
 
     def initUI(self):
@@ -30,6 +31,7 @@ class ProgressWindow(QtGui.QMainWindow):
     def timerEvent(self):
         if self.step >= 100.0:
             self.timer.stop()
+            self.dataset.update()
             self.parent.setEnabled(True)
             self.close()
             return

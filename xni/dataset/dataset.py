@@ -45,7 +45,7 @@ class Dataset:
             self.async_result.wait()
         return self.async_result
 
-    def update_recon_result(self):
+    def update(self):
         self.recon_data = np.array(self.async_result.get())
 
 

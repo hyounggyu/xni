@@ -61,14 +61,15 @@ class MainWindow(QtGui.QMainWindow):
             step = int(self.lineEditSliceNumberStep.text())
         else:
             pass
-        self.async_result = dataset.recon(start, end, step)
-        ProgressWindow(self.async_result, parent=self)
+        dataset.recon(start, end, step)
+        ProgressWindow(dataset, parent=self)
+
         # wait?
         #self.buttonReconView.setEnabled(True)
         #self.statusBar().showMessage('Done')
 
     def reconView(self):
-        ImageViewWindow(dataset.recon, parent=self)
+        ImageViewWindow(dataset.recon_data, parent=self)
 
     def toggleSliceRange(self):
         self.horizontalSliderSliceNumber.setEnabled(False)

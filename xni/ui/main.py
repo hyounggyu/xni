@@ -51,6 +51,9 @@ class MainWindow(QtGui.QMainWindow):
         self.updateUI()
 
     def reconRun(self):
+        start = 0
+        end = 1
+        step = 1
         if self.radioButtonOneSlice.isChecked():
             start = self.horizontalSliderSliceNumber.value()
             end = start+1

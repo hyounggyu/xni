@@ -2,7 +2,7 @@
 
 (*:Mathematica Version: 10.0 *)
 
-(*:Package Version: 0.01*)
+(*:Package Version: 0.02*)
 
 (*:License: GPL*)
 
@@ -45,8 +45,8 @@ Phantom3DRegion[]:=head/.{center_,axislengths_,phi_}->Ellipsoid[center,RotationM
 
 Phantom3DTransformedRegion[args_List]:=Fold[TransformedRegion,#,args]&/@(Phantom3DRegion[])
 
-Phantom3DGridPoints[size_Integer]:=Module[{range},
-	range=Range[-1.,1.,2./size];
+Phantom3DGridPoints[size_Integer,max_:1.]:=Module[{range},
+	range=Range[-max,max,2.0 max/size];
 	If[Last@range==1.,range=Drop[range,-1]];
 	Table[{x,y,z},{z,Reverse@range},{y,Reverse@range},{x,range}]
 ]
@@ -56,15 +56,18 @@ Phantom3DRegionToData[region_,points_]:=Module[{mf},
 	Plus@@(rho Boole@Through@mf@points)
 ]
 
-Phantom3DRegionToImage3D[region_,size_Integer]:=Module[{mf,range,rrange,image3ddata},
+Phantom3DRegionToImage3D[region_,size_Integer,max_:1.]:=Module[{mf,range,rrange,image3ddata},
 	mf=RegionMember/@(region);
-	image3ddata=Image3D/@(Boole@Through@mf@Phantom3DGridPoints[size]);
+	image3ddata=Image3D/@(Boole@Through@mf@Phantom3DGridPoints[size,max]);
 	ImageApply[Plus,MapThread[ImageMultiply,{image3ddata,rho}]]
 ]
 
 End[]
 
 EndPackage[]
+
+
+
 
 
 

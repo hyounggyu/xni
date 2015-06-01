@@ -1,24 +1,58 @@
 import numpy as np
 from scipy import linalg
 
-
-__all__ = ['corr2d']
-
-PARABOLOID = None
+__all__ = ['corr1d', 'corr2d']
 
 
 def _limit_abs_one(val):
     return val if np.fabs(val) < 1. else 1.*np.sign(val)
 
 
+def _init_arc():
+    arc = np.zeros((3,3))
+    for i in range(3):
+        x = i + 1
+        arc[i,:] = x*x, x, 1
+    return arc
+
+
 def _init_paraboloid():
-    global PARABOLOID
-    PARABOLOID = np.zeros((9, 6))
+    paraboloid = np.zeros((9, 6))
     for i in range(9):
         iy, ix = np.unravel_index(i, (3,3))
         ix = ix + 1
         iy = iy + 1
-        PARABOLOID[i,:] = ix*ix, iy*iy, ix*iy, ix, iy, 1
+        paraboloid[i,:] = ix*ix, iy*iy, ix*iy, ix, iy, 1
+    return paraboloid
+
+
+ARC = _init_arc()
+PARABOLOID = _init_paraboloid()
+
+
+def corr1d(ref, trans):
+    '''1D Cross-correlation with Curve Fitting.
+    '''
+    global ARC
+
+    if np.shape(ref) != np.shape(trans):
+        raise ValueError('Arrays shape should be same.')
+
+    n, = np.shape(ref)
+
+    corr = np.fft.ifft(np.multiply(np.conj(np.fft.fft(ref)), np.fft.fft(trans)))
+    peak, = np.unravel_index(np.argmax(corr), corr.shape)
+    arr = np.real(np.roll(corr, shift=-peak+1)[:3])
+    c, resid, rank, sigma = linalg.lstsq(ARC, arr)
+
+    sh = 0.0
+    if c[0] != 0:
+        sh = _limit_abs_one(-c[1]/2/c[0] - 2.)
+
+    t = peak + sh
+    t = t if t < n/2. else t - n
+
+    return t
 
 
 def corr2d(ref, trans):
@@ -29,9 +63,6 @@ def corr2d(ref, trans):
         SPIDER - http://spider.wadsworth.org/spider_doc/spider/src/parabl.f
     '''
     global PARABOLOID
-
-    if PARABOLOID == None:
-        _init_paraboloid()
 
     if np.shape(ref) != np.shape(trans):
         raise ValueError('Arrays shape should be same.')

@@ -8,12 +8,26 @@ def _limit_abs_one(val):
     return val if np.fabs(val) < 1. else 1.*np.sign(val)
 
 
-def _init_arc():
-    arc = np.zeros((3,3))
-    for i in range(3):
-        x = i + 1
-        arc[i,:] = x*x, x, 1
-    return arc
+def corr1d(ref, trans):
+    '''1D Cross-correlation with Curve Fitting.
+    '''
+    if np.shape(ref) != np.shape(trans):
+        raise ValueError('Arrays shape should be same.')
+
+    n, = np.shape(ref)
+
+    corr = np.fft.ifft(np.multiply(np.conj(np.fft.fft(ref)), np.fft.fft(trans)))
+    peak, = np.unravel_index(np.argmax(corr), corr.shape)
+    arr = np.real(np.roll(corr, shift=-peak+1)[:3])
+
+    sh = 0.0
+    if arr[0]+arr[2] != 2.*arr[1]:
+        sh = (arr[0]-arr[2]) / (2.*(arr[0]-2.*arr[1]+arr[2]))
+
+    t = peak + _limit_abs_one(sh)
+    t = t if t < n/2. else t - n
+
+    return t
 
 
 def _init_paraboloid():
@@ -26,33 +40,7 @@ def _init_paraboloid():
     return paraboloid
 
 
-ARC = _init_arc()
 PARABOLOID = _init_paraboloid()
-
-
-def corr1d(ref, trans):
-    '''1D Cross-correlation with Curve Fitting.
-    '''
-    global ARC
-
-    if np.shape(ref) != np.shape(trans):
-        raise ValueError('Arrays shape should be same.')
-
-    n, = np.shape(ref)
-
-    corr = np.fft.ifft(np.multiply(np.conj(np.fft.fft(ref)), np.fft.fft(trans)))
-    peak, = np.unravel_index(np.argmax(corr), corr.shape)
-    arr = np.real(np.roll(corr, shift=-peak+1)[:3])
-    c, resid, rank, sigma = linalg.lstsq(ARC, arr)
-
-    sh = 0.0
-    if c[0] != 0:
-        sh = _limit_abs_one(-c[1]/2/c[0] - 2.)
-
-    t = peak + sh
-    t = t if t < n/2. else t - n
-
-    return t
 
 
 def corr2d(ref, trans):

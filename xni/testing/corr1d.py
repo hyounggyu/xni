@@ -8,7 +8,7 @@ np.set_printoptions(precision=3)
 A = np.array([1, 3, 5, 3, 1], dtype=np.double)
 A = np.pad(A, 10, mode='constant', constant_values=1)
 
-err_x, err_y = 0, 0
+err_count = 0
 
 DEBUG = False
 
@@ -17,12 +17,12 @@ for _ in range(1000):
     B = shift(A, (rand), mode='constant', cval=1.0)
     corr = correlation.corr1d(A, B)
     if DEBUG == True:
-        print (A)
-        print (B)
-        print (rand)
-        print (corr)
-        print (np.fabs(rand-corr))
-    err_y = err_y + (0 if np.fabs(rand-corr) < 0.1 else 1)
+        #print (A)
+        #print (B)
+        print ('rand=',rand)
+        print ('corr=',corr)
+        #print (np.fabs(rand-corr))
+    err_count = err_count + (0 if np.fabs(rand-corr) < 0.1 else 1)
 
 print ('----')
-print (err_y, err_x)
+print (err_count)

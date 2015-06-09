@@ -18,11 +18,11 @@ def corr1d(ref, trans):
 
     corr = np.fft.ifft(np.multiply(np.conj(np.fft.fft(ref)), np.fft.fft(trans)))
     peak, = np.unravel_index(np.argmax(corr), corr.shape)
-    arr = np.real(np.roll(corr, shift=-peak+1)[:3])
+    z = np.real(np.roll(corr, shift=-peak+1)[:3])
 
     sh = 0.0
-    if arr[0]+arr[2] != 2.*arr[1]:
-        sh = (arr[0]-arr[2]) / (2.*(arr[0]-2.*arr[1]+arr[2]))
+    if z[0]+z[2] != 2.*z[1]:
+        sh = (z[0]-z[2]) / (2.*(z[0]-2.*z[1]+z[2]))
 
     t = peak + _limit_abs_one(sh)
     t = t if t < n/2. else t - n

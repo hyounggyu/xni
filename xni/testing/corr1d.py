@@ -17,11 +17,11 @@ for _ in range(1000):
     B = shift(A, (rand), mode='constant', cval=1.0)
     corr = correlation.corr1d(A, B)
     if DEBUG == True:
-        #print (A)
-        #print (B)
+        print (A)
+        print (B)
         print ('rand=',rand)
         print ('corr=',corr)
-        #print (np.fabs(rand-corr))
+        print (np.fabs(rand-corr))
     err_count = err_count + (0 if np.fabs(rand-corr) < 0.1 else 1)
 
 print ('----')

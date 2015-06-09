@@ -17,7 +17,7 @@ A = np.pad(A, 10, mode='constant', constant_values=1)
 err_x, err_y = 0, 0
 
 ntry = 1000
-DEBUG = True
+DEBUG = False
 SHOW = False
 
 for _ in range(ntry):

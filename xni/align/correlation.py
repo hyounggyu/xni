@@ -75,6 +75,25 @@ def corr2d(ref, trans):
         ysh = _limit_abs_one((-2*c[0]*c[4]+c[2]*c[3])/denom - 2.)
         xsh = _limit_abs_one((-2*c[1]*c[3]+c[2]*c[4])/denom - 2.)
 
+    print('old_xsh=', xsh)
+    print('old_ysh=', ysh)
+
+    z = arr
+    a_ = 1/9.*(-z[0,0] + 2*z[0,1] - z[0,2] + 2*z[1,0] + 5*z[1,1] + 2*z[1,2] - z[2,0] + 2*z[2,1] - z[2,2])
+    b_ = 1/6.*(-z[0,0] + z[0,2] - z[1,0] + z[1,2] - z[2,0] + z[2,2])
+    c_ = 1/6.*(-z[0,0] - z[0,1] - z[0,2] + z[2,0] + z[2,1] + z[2,2])
+    d_ = 1/6.*(z[0,0] + z[0,1] + z[0,2] - 2*z[1,0] - 2*z[1,1] - 2*z[1,2] + z[2,0] + z[2,1] + z[2,2])
+    e_ = 1/4.*(z[0,0] - z[0,2] - z[2,0] + z[2,2])
+    f_ = 1/6.*(z[0,0] - 2*z[0,1] + z[0,2] + z[1,0] - 2*z[1,1] + z[1,2] + z[2,0] - 2*z[2,1] + z[2,2])
+
+    denom = e_*e_ - 4.*d_*f_
+    if denom != 0:
+        xsh = _limit_abs_one((2.*b_*d_-c_*e_)/denom)
+        ysh = _limit_abs_one((2.*c_*f_-b_*e_)/denom)
+
+    print('new_xsh=', xsh)
+    print('new_ysh=', ysh)
+
     yt = peak_y + ysh
     xt = peak_x + xsh
 

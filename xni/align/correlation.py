@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import linalg
+
 
 __all__ = ['corr1d', 'corr2d']
 
@@ -30,19 +30,6 @@ def corr1d(ref, trans):
     return t
 
 
-def _init_paraboloid():
-    paraboloid = np.zeros((9, 6))
-    for i in range(9):
-        iy, ix = np.unravel_index(i, (3,3))
-        ix = ix + 1
-        iy = iy + 1
-        paraboloid[i,:] = ix*ix, iy*iy, ix*iy, ix, iy, 1
-    return paraboloid
-
-
-PARABOLOID = _init_paraboloid()
-
-
 def corr2d(ref, trans):
     '''2D Cross-correlation with Paraboloid Fitting.
 
@@ -50,8 +37,6 @@ def corr2d(ref, trans):
         Arec3d - https://codeforge.lbl.gov/anonscm/arec3d/trunk/src/align2dstack.c
         SPIDER - http://spider.wadsworth.org/spider_doc/spider/src/parabl.f
     '''
-    global PARABOLOID
-
     if np.shape(ref) != np.shape(trans):
         raise ValueError('Arrays shape should be same.')
 
@@ -63,22 +48,9 @@ def corr2d(ref, trans):
 
     # Reference: Stack Overflow: 4148292
     # Given a 2D-array, returns an 3x3 array whose "center" element is arr[y,x]
-    arr = np.real(np.roll(np.roll(corr, shift=-peak_y+1, axis=0), shift=-peak_x+1, axis=1)[:3,:3])
+    z = np.real(np.roll(np.roll(corr, shift=-peak_y+1, axis=0), shift=-peak_x+1, axis=1)[:3,:3])
 
     # Least square fit
-    c, resid, rank, sigma = linalg.lstsq(PARABOLOID, arr.flatten())
-
-    # df/dx = 0, df/dy = 0
-    ysh, xsh = 0.0, 0.0
-    denom = 4*c[0]*c[1]-c[2]*c[2]
-    if denom != 0:
-        ysh = _limit_abs_one((-2*c[0]*c[4]+c[2]*c[3])/denom - 2.)
-        xsh = _limit_abs_one((-2*c[1]*c[3]+c[2]*c[4])/denom - 2.)
-
-    print('old_xsh=', xsh)
-    print('old_ysh=', ysh)
-
-    z = arr
     a_ = 1/9.*(-z[0,0] + 2*z[0,1] - z[0,2] + 2*z[1,0] + 5*z[1,1] + 2*z[1,2] - z[2,0] + 2*z[2,1] - z[2,2])
     b_ = 1/6.*(-z[0,0] + z[0,2] - z[1,0] + z[1,2] - z[2,0] + z[2,2])
     c_ = 1/6.*(-z[0,0] - z[0,1] - z[0,2] + z[2,0] + z[2,1] + z[2,2])
@@ -86,13 +58,11 @@ def corr2d(ref, trans):
     e_ = 1/4.*(z[0,0] - z[0,2] - z[2,0] + z[2,2])
     f_ = 1/6.*(z[0,0] - 2*z[0,1] + z[0,2] + z[1,0] - 2*z[1,1] + z[1,2] + z[2,0] - 2*z[2,1] + z[2,2])
 
+    # df/dx = 0, df/dy = 0
     denom = e_*e_ - 4.*d_*f_
     if denom != 0:
         xsh = _limit_abs_one((2.*b_*d_-c_*e_)/denom)
         ysh = _limit_abs_one((2.*c_*f_-b_*e_)/denom)
-
-    print('new_xsh=', xsh)
-    print('new_ysh=', ysh)
 
     yt = peak_y + ysh
     xt = peak_x + xsh

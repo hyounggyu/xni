@@ -1,6 +1,5 @@
 import numpy as np
 
-
 __all__ = ['corr1d', 'corr2d']
 
 

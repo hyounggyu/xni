@@ -38,8 +38,8 @@ package: xni
 # before_script:
 #   - echo "before_script!"
 ## Put your main computations here!  
-script:
-  - echo "This is my binstar build!"
+# script:
+#   - echo "This is my binstar build!"
 ## This will run after the script regardless of the result of script
 ## BINSTAR_BUILD_RESULT=[succcess|failure] 
 # after_script:
@@ -50,6 +50,10 @@ script:
 ## This will be run only after a build failure
 # after_failure:
 #   - echo "after_failure!"
+
+platform: linux-64
+engine: python=3
+script: conda build .
 
 #===============================================================================
 # Build Results
@@ -63,5 +67,4 @@ script:
 ## The special build targets 'conda' and 'pypi' may be used to 
 ## upload conda builds  
 ## e.g. conda is an alias for /opt/anaconda/conda-bld/<os-arch>/*.tar.bz2
-# build_targets:
-#   - conda
+build_targets: conda

@@ -69,3 +69,6 @@ bower_components
 
 # Samples
 sample
+
+# HDF5
+*.h5

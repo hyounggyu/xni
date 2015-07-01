@@ -10,8 +10,8 @@ def align_rot_axis(data, axis=1, lview=None):
     '''
 
     d = np.sum(data, axis)
-    res = np.zeros(d.shape[0], dtype=np.double)
-
-    res = map(corr1d, d, d[1:])
+    map_obj = map(corr1d, d, d[1:])
+    res = np.array(list(map_obj))
+    res = np.cumsum(res)
 
     return res

@@ -26,3 +26,7 @@ def new(output, images, bgnds=[], darks=[],
         images_dset[i,:,:] = imread(im)[:,:]
         if generator:
             yield i, im
+
+def load(filename, grp='original', dset='images'):
+    with h5py.File(filename, 'r') as f:
+        return f[grp+'/'+dset][:]

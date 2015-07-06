@@ -28,5 +28,11 @@ def new(output, images, bgnds=[], darks=[],
             yield i, im
 
 def load(filename, grp='original', dset='images'):
+    '''
+    default datatype is double
+    '''
     with h5py.File(filename, 'r') as f:
-        return f[grp+'/'+dset][:]
+        dset = f[grp][dset]
+        with dset.astype('double'):
+            out = dset[:]
+    return out

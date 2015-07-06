@@ -36,3 +36,7 @@ def load(filename, grp='original', dset='images'):
         with dset.astype('double'):
             out = dset[:]
     return out
+
+def view(dset):
+    import pyqtgraph as pg
+    pg.image(dset)

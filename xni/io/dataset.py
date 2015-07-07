@@ -44,15 +44,14 @@ def send(dset, ip='127.0.0.1', port='5550'):
     context = zmq.Context()
 
     print('Listen to {}:{}'.format(ip, port))
-    socket  = context.socket(zmq.REP)
-    socket.bind('tcp://{}:{}'.format(ip, port))
-
-    while True:
-        message = socket.recv()
-        req_num = msgpack.unpackb(message)
-        if req_num < 0:
-            break
-        socket.send(dset[req_num].dumps())
+    with context.socket(zmq.REP) as socket:
+        socket.bind('tcp://{}:{}'.format(ip, port))
+        while True:
+            message = socket.recv()
+            start, end, step = msgpack.unpackb(message)
+            if start < 0:
+                break
+            socket.send(dset[start:end:step].dumps())
 
 def recv(req_num=0, ip='127.0.0.1', port='5550'):
     context = zmq.Context()

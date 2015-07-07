@@ -1,5 +1,8 @@
 import h5py
+import msgpack
+import numpy as np
 from skimage.external.tifffile import imread
+import zmq
 
 
 def create(output, images, bgnds=[], darks=[],
@@ -38,28 +41,27 @@ def load(filename, grp='original', dset='images'):
     return out
 
 def send(dset, ip='127.0.0.1', port='5550'):
-    import zmq
     context = zmq.Context()
 
     print('Listen to {}:{}'.format(ip, port))
     socket  = context.socket(zmq.REP)
     socket.bind('tcp://{}:{}'.format(ip, port))
 
-    message = socket.recv()
-    print(message)
-    socket.send(dset[0].dumps())
+    while True:
+        message = socket.recv()
+        req_num = msgpack.unpackb(message)
+        if req_num < 0:
+            break
+        socket.send(dset[req_num].dumps())
 
-def recv(ip='127.0.0.1', port='5550'):
-    import zmq
-    import numpy as np
-
+def recv(req_num=0, ip='127.0.0.1', port='5550'):
     context = zmq.Context()
 
     print('Connecting to {}:{}'.format(ip, port))
     socket = context.socket(zmq.REQ)
     socket.connect('tcp://{}:{}'.format(ip, port))
 
-    socket.send(b'Hello')
+    socket.send(msgpack.packb(req_num))
 
     message = socket.recv()
     return np.loads(message)

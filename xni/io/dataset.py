@@ -43,9 +43,9 @@ def load(filename, grp='original', dset='images'):
 def send(dset, ip='127.0.0.1', port='5550'):
     context = zmq.Context()
 
-    print('Listen to {}:{}'.format(ip, port))
     with context.socket(zmq.REP) as socket:
         socket.bind('tcp://{}:{}'.format(ip, port))
+        print('Listen to {}:{}'.format(ip, port))
         while True:
             message = socket.recv()
             start, end, step = msgpack.unpackb(message)
@@ -56,9 +56,9 @@ def send(dset, ip='127.0.0.1', port='5550'):
 def recv(_slice=(0,1,1), ip='127.0.0.1', port='5550'):
     context = zmq.Context()
 
-    print('Connecting to {}:{}'.format(ip, port))
     with context.socket(zmq.REQ) as socket:
         socket.connect('tcp://{}:{}'.format(ip, port))
+        print('Connecting to {}:{}'.format(ip, port))
         socket.send(msgpack.packb(_slice))
         message = socket.recv()
 
@@ -66,7 +66,8 @@ def recv(_slice=(0,1,1), ip='127.0.0.1', port='5550'):
 
 def bye(ip='127.0.0.1', port='5550'):
     context = zmq.Context()
-    print('Bye! to {}:{}'.format(ip, port))
+
     with context.socket(zmq.REQ) as socket:
+        print('Bye! to {}:{}'.format(ip, port))
         socket.connect('tcp://{}:{}'.format(ip, port))
         socket.send(msgpack.packb([-1,0,0]))

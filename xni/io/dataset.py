@@ -1,5 +1,4 @@
 import h5py
-import msgpack
 import numpy as np
 from skimage.external.tifffile import imread
 import zmq
@@ -40,34 +39,30 @@ def load(filename, grp='original', dset='images'):
             out = dset[:]
     return out
 
-def send(dset, ip='127.0.0.1', port='5550'):
+def send(*dsets, ip='127.0.0.1', port='5550'):
     context = zmq.Context()
 
     with context.socket(zmq.REP) as socket:
         socket.bind('tcp://{}:{}'.format(ip, port))
-        print('Listen to {}:{}'.format(ip, port))
-        while True:
-            message = socket.recv()
-            start, end, step = msgpack.unpackb(message)
-            if start < 0:
-                break
-            socket.send(dset[start:end:step].dumps())
+        index = socket.recv_pyobj()
+        for dset in dsets[:-1]:
+            socket.send_pyobj(dset[index], flags=zmq.SNDMORE)
+        socket.send_pyobj(dsets[-1][index])
+        socket.recv() # wait bye message
 
-def recv(_slice=(0,1,1), ip='127.0.0.1', port='5550'):
+def recv(index=None, ip='127.0.0.1', port='5550'):
     context = zmq.Context()
+
+    if index == None:
+        index = np.index_exp[0:1]
 
     with context.socket(zmq.REQ) as socket:
         socket.connect('tcp://{}:{}'.format(ip, port))
-        print('Connecting to {}:{}'.format(ip, port))
-        socket.send(msgpack.packb(_slice))
-        message = socket.recv()
+        socket.send_pyobj(index)
+        parts = [socket.recv_pyobj()]
+        while socket.getsockopt(zmq.RCVMORE):
+            part = socket.recv_pyobj()
+            parts.append(part)
+        socket.send(b'BYE')
 
-    return np.loads(message)
-
-def bye(ip='127.0.0.1', port='5550'):
-    context = zmq.Context()
-
-    with context.socket(zmq.REQ) as socket:
-        print('Bye! to {}:{}'.format(ip, port))
-        socket.connect('tcp://{}:{}'.format(ip, port))
-        socket.send(msgpack.packb([-1,0,0]))
+    return parts

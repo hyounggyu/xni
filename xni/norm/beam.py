@@ -1,6 +1,9 @@
 import numpy as np
 
-def norm_beam(data, slice_obj, _map=map):
+from ..._shared import fromiter
+
+
+def beam(data, slice_obj, _map=map):
     '''
     return normalised data, average
     '''
@@ -12,3 +15,9 @@ def norm_beam(data, slice_obj, _map=map):
     mapobj = _map(np.subtract, data, iavg)
 
     return np.array(list(mapobj)), iavg
+
+
+def absorp(data, bg, dk=None, _map=map):
+    f = lambda im: im / bg
+    map_obj = _map(f, data)
+    return fromiter(map_obj)

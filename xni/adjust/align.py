@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.ndimage.interpolation import shift as ndshift
 
-from ..._shared import fromiter
-from .corr import corr1d
+from ..util import fromiter
+from ..calc.corr import corr1d
 
 
 def shift(data, pos, _map=map):
@@ -10,7 +10,7 @@ def shift(data, pos, _map=map):
     return fromiter(map_obj)
 
 
-def align_rot_axis(data, axis=2, data_shift=False, lview=None):
+def rot_axis(data, axis=2, data_shift=False, _map=map):
     '''
     data: 3d volume data
     axis: sum axis

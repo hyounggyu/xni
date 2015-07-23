@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..._shared import fromiter
+from ..util import fromiter
 
 
 def beam(data, slice_obj, _map=map):

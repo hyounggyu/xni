@@ -1,7 +1,7 @@
 import argparse
 
 from .dataset import start_create
-from .view import start_view, start_remoteview
+from .viewer import start_view, start_remoteview
 
 def parse_args():
     parser = argparse.ArgumentParser(prog='xni.manage')

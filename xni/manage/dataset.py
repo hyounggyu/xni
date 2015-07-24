@@ -41,7 +41,7 @@ def start_create(args):
     images = [str(im) for im in images]
     bgnds = [str(im) for im in bgnds]
     darks = [str(im) for im in darks]
-    for i, name in dataset.create(args.output, images, bgnds, darks):
+    for i, name in create(args.output, images, bgnds, darks):
         print(i, name)
 
 def load(filename, grp='original', dset='images'):

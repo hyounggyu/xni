@@ -1,10 +1,10 @@
 import argparse
 
-from .create import start_create, start_createqt
+from .dataset import start_create
 from .view import start_view, start_remoteview
 
 def parse_args():
-    parser = argparse.ArgumentParser(prog='datamanager')
+    parser = argparse.ArgumentParser(prog='xni.manage')
     parser.add_argument('--version', help='version help')
 
     subparsers = parser.add_subparsers(help='sub commands')
@@ -16,9 +16,6 @@ def parse_args():
     create_parser.add_argument('-b', '--background-prefix', help='background image prefix help', required=False)
     create_parser.add_argument('-d', '--dark-prefix', help='dark image prefix help', required=False)
     create_parser.set_defaults(func=start_create)
-
-    createqt_parser = subparsers.add_parser('createqt', help='createqt help')
-    createqt_parser.set_defaults(func=start_createqt)
 
     view_parser = subparsers.add_parser('view', help='view help')
     view_parser.add_argument('filename', help='filename help')

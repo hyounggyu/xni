@@ -5,7 +5,7 @@ import h5py
 from PyQt4 import QtGui
 import pyqtgraph as pg
 
-import dataset
+from . import dataset
 
 
 def _swap(data):

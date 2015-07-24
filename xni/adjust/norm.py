@@ -18,6 +18,7 @@ def beam(data, slice_obj, _map=map):
 
 
 def absorp(data, bg, dk=None, _map=map):
+    # TODO: check bg.shape
     f = lambda im: im / bg
     map_obj = _map(f, data)
     return fromiter(map_obj)

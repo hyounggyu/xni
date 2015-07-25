@@ -1,7 +1,9 @@
 import argparse
 
-from .dataset import start_create
-from .viewer import start_view, start_remoteview
+# Absolute import because Flask app
+from xni.manage.dataset import start_create
+from xni.manage.viewer import start_view, start_remoteview
+from xni.manage.monitor import start_monitor
 
 def parse_args():
     parser = argparse.ArgumentParser(prog='xni.manage')
@@ -28,6 +30,9 @@ def parse_args():
     remoteview_parser.add_argument('--port', help='port help', required=False)
     remoteview_parser.add_argument('--step', help='slice help ex.', required=False, type=int)
     remoteview_parser.set_defaults(func=start_remoteview)
+
+    monitor_parser = subparsers.add_parser('monitor', help='monitor help')
+    monitor_parser.set_defaults(func=start_monitor)
 
     args = parser.parse_args()
     if hasattr(args, 'func'):

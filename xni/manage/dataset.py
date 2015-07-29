@@ -65,19 +65,25 @@ def send(*dsets, ip='127.0.0.1', port='5550'):
         socket.send_pyobj(dsets[-1][index])
         socket.recv() # wait bye message
 
-def recv(index=None, ip='127.0.0.1', port='5550'):
-    context = zmq.Context()
 
+def recv(index=None, ip='127.0.0.1', port='5550'):
     if index == None:
         index = np.index_exp[0:1]
 
-    with context.socket(zmq.REQ) as socket:
-        socket.connect('tcp://{}:{}'.format(ip, port))
-        socket.send_pyobj(index)
-        parts = [socket.recv_pyobj()]
-        while socket.getsockopt(zmq.RCVMORE):
-            part = socket.recv_pyobj()
-            parts.append(part)
-        socket.send(b'BYE')
-
+    with zmq.Context() as context:
+        with context.socket(zmq.REQ) as socket:
+            # https://github.com/zeromq/pyzmq/issues/132
+            socket.setsockopt(zmq.LINGER, 0)
+            socket.connect('tcp://{}:{}'.format(ip, port))
+            socket.send_pyobj(index)
+            poller = zmq.Poller()
+            poller.register(socket, zmq.POLLIN)
+            if poller.poll(5*1000):
+                parts = [socket.recv_pyobj()]
+            else:
+                raise IOError('Timeout reciving data')
+            while socket.getsockopt(zmq.RCVMORE):
+                part = socket.recv_pyobj()
+                parts.append(part)
+            socket.send(b'BYE')
     return parts

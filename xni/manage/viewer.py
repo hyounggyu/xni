@@ -39,7 +39,12 @@ def start_remoteview(args):
     port = '5550' if args.port == None else args.port
     step = 10 if args.step == None else args.step
     index = np.index_exp[0::step]
-    data = dataset.recv(index=index, ip=ip, port=port)
+    # TODO: print reciving data message
+    try:
+        data = dataset.recv(index=index, ip=ip, port=port)
+    except Exception as e:
+        print('Exception: {}'.format(e))
+        sys.exit(1)
     ret = show(data)
     sys.exit(ret)
 

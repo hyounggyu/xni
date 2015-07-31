@@ -66,7 +66,10 @@ def send(*dsets, ip='127.0.0.1', port='5550'):
         socket.recv() # wait bye message
 
 
-def recv(index=None, ip='127.0.0.1', port='5550'):
+def recv(index=None, ip='127.0.0.1', port='5550', timeout=10):
+    '''
+    timeout = unit sec
+    '''
     if index == None:
         index = np.index_exp[0:1]
 
@@ -78,7 +81,7 @@ def recv(index=None, ip='127.0.0.1', port='5550'):
             socket.send_pyobj(index)
             poller = zmq.Poller()
             poller.register(socket, zmq.POLLIN)
-            if poller.poll(5*1000):
+            if poller.poll(timeout*1000):
                 parts = [socket.recv_pyobj()]
             else:
                 raise IOError('Timeout reciving data')

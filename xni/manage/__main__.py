@@ -32,6 +32,7 @@ def parse_args():
     remoteview_parser.set_defaults(func=start_remoteview)
 
     monitor_parser = subparsers.add_parser('monitor', help='monitor help')
+    monitor_parser.add_argument('--port', help='port help', required=False, type=int)
     monitor_parser.set_defaults(func=start_monitor)
 
     args = parser.parse_args()

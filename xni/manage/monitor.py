@@ -6,7 +6,7 @@ app = Flask(__name__)
 @app.route('/')
 def hello():
     return 'hello'
-# [id: 1, cpu_persent: 10.0]
+
 @app.route('/status.json')
 def status():
     cpu = ps.cpu_percent(1, percpu=True)
@@ -20,4 +20,4 @@ def status():
 
 def start_monitor(args):
     # TODO: check debug mode
-    app.run(host='0.0.0.0', debug=True, use_reloader=True)
+    app.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=True)

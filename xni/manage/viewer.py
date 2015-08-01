@@ -36,7 +36,7 @@ def start_view(args):
 
 def start_remoteview(args):
     ip = '127.0.0.1' if args.ip == None else args.ip
-    port = '5550' if args.port == None else args.port
+    port = '5051' if args.port == None else args.port
     step = 1 if args.step == None else args.step
     index = np.index_exp[0::step]
     # TODO: print reciving data message

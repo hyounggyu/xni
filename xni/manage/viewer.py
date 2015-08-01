@@ -38,10 +38,12 @@ def start_remoteview(args):
     ip = '127.0.0.1' if args.ip == None else args.ip
     port = '5051' if args.port == None else args.port
     step = 1 if args.step == None else args.step
+    timeout = 10 if args.timeout == None else args.timeout
     index = np.index_exp[0::step]
-    # TODO: print reciving data message
+    print("Connect to tcp://{}:{}...".format(ip, port))
+    print("Index: {}".format(index))
     try:
-        data = dataset.recv(index=index, ip=ip, port=port)
+        data = dataset.recv(index=index, ip=ip, port=port, timeout=timeout)
     except Exception as e:
         print('Exception: {}'.format(e))
         sys.exit(1)

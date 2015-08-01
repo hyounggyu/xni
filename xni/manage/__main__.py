@@ -28,7 +28,8 @@ def parse_args():
     remoteview_parser = subparsers.add_parser('remoteview', help='removeview help')
     remoteview_parser.add_argument('--ip', help='ip help', required=False)
     remoteview_parser.add_argument('--port', help='port help', required=False)
-    remoteview_parser.add_argument('--step', help='slice help ex.', required=False, type=int)
+    remoteview_parser.add_argument('--step', help='step help ex.', required=False, type=int)
+    remoteview_parser.add_argument('--timeout', help='timeout help ex.', required=False, type=int)
     remoteview_parser.set_defaults(func=start_remoteview)
 
     monitor_parser = subparsers.add_parser('monitor', help='monitor help')

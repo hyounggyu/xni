@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..calc.corr import corr1d, corr2d
-
+from ..util import fromiter
 
 def valign(data, _map=map):
     '''
@@ -9,7 +9,7 @@ def valign(data, _map=map):
     '''
     d = np.sum(data, axis=2) # axis 2 is left-right
     map_obj = _map(corr1d, d, d[1:])
-    res = np.fromiter(map_obj, np.double)
+    res = fromiter(map_obj, dtype=data.dtype)
     res = np.cumsum(res)
     res = -1.0 * np.insert(res, 0, 0)
     return res

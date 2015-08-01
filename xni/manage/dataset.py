@@ -44,13 +44,13 @@ def start_create(args):
     for i, name in create(args.output, images, bgnds, darks):
         print(i, name)
 
-def load(filename, grp='original', dset='images'):
+def load(filename, grp='original', dset='images', dtype='f4'):
     '''
-    default datatype is double
+    default datatype is 4byte float
     '''
     with h5py.File(filename, 'r') as f:
         dset = f[grp][dset]
-        with dset.astype('double'):
+        with dset.astype(dtype):
             out = dset[:]
     return out
 

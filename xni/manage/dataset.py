@@ -56,7 +56,7 @@ def load(filename, grp='original', dset='images', dtype='f4'):
             out = dset[:]
     return out
 
-def send(*dsets, ip='127.0.0.1', port='5550'):
+def send(*dsets, ip='127.0.0.1', port=5051):
     context = zmq.Context()
 
     with context.socket(zmq.REP) as socket:
@@ -68,7 +68,7 @@ def send(*dsets, ip='127.0.0.1', port='5550'):
         socket.recv() # wait bye message
 
 
-def recv(index=None, ip='127.0.0.1', port='5550', timeout=10):
+def recv(index=None, ip='127.0.0.1', port=5051, timeout=10):
     '''
     timeout = unit sec
     '''

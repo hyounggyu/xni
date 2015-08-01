@@ -19,5 +19,6 @@ def status():
     return response
 
 def start_monitor(args):
+    port = 5059 if args.port == None else args.port
     # TODO: check debug mode
-    app.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=True)
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=True)

@@ -5,11 +5,13 @@ from ..util import fromiter, isvector
 
 
 def absceil(val):
+    if np.abs(np.around(val)-val) < np.finfo(type(val)).eps:
+        val = np.around(val)
     return np.sign(val)*np.ceil(np.abs(val))
 
 
 def crop_index(pos):
-    if isinstance(pos, (list, np.ndarray)):
+    if isvector(pos):
         if len(pos.shape) > 1:
             raise TypeError('1d array')
         pos_max = absceil(max(pos))
@@ -42,11 +44,11 @@ def shift2d(data, vt=None, ht=None, crop=True, _map=map):
         pass
     elif isvector(vt): # vt is a vector, ht is a value
         ht_val = ht
-        ht = np.empty(vt.shape)
+        ht = np.empty(vt.shape, dtype=vt.dtype)
         ht.fill(ht_val)
     else: # vt is a value, ht is a vector
         vt_val = vt
-        vt = np.empty(ht.shape)
+        vt = np.empty(ht.shape, dtype=ht.dtype)
         vt.fill(vt_val)
 
     pos = np.vstack((vt, ht)).T

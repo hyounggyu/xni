@@ -14,8 +14,8 @@ def crop_index(pos):
     if isvector(pos):
         if len(pos.shape) > 1:
             raise TypeError('1d array')
-        pos_max = absceil(max(pos))
-        pos_min = absceil(min(pos))
+        pos_max = absceil(pos.max())
+        pos_min = absceil(pos.min())
     else:
         pos_max = pos_min = absceil(pos)
 

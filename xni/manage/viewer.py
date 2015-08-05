@@ -27,6 +27,15 @@ class ViewWindow(QtGui.QMainWindow):
         self.setWindowTitle('ImageView')
 
 
+def show(data):
+    app = QtGui.QApplication(sys.argv)
+    win = ViewWindow(data)
+    win.show()
+    win.activateWindow()
+    win.raise_()
+    return app.exec_()
+
+
 def start_view(args):
     group_name = 'original' if args.group == None else args.group
     dataset_name = 'images' if args.dataset == None else args.dataset
@@ -42,18 +51,9 @@ def start_remoteview(args):
     print("Connect to {}:{}...".format(host, port))
     try:
         data = dataset.get(index=(0, None, step), host=host, port=port)
-        print('finish')
     except Exception as e:
         print('Exception: {}'.format(e))
         sys.exit(1)
+    print('Data shape: {}'.format(data.shape))
     ret = show(data)
     sys.exit(ret)
-
-
-def show(data):
-    app = QtGui.QApplication(sys.argv)
-    win = ViewWindow(data)
-    win.show()
-    win.activateWindow()
-    win.raise_()
-    return app.exec_()

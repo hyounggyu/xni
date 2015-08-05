@@ -1,8 +1,8 @@
 import os
 
-from .. import data_dir
+from .. import sample_dir
 
 __all__ = ['samplepath']
 
 def samplepath(f):
-    return os.path.join(data_dir, f)
+    return os.path.join(sample_dir, f)

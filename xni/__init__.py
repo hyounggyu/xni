@@ -1,6 +1,6 @@
 import os
 
 pkg_dir = os.path.abspath(os.path.dirname(__file__))
-data_dir = os.path.join(pkg_dir, 'data')
+sample_dir = os.path.join(pkg_dir, 'sample')
 
 __version__ = '0.5.0'

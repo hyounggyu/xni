@@ -2,7 +2,7 @@ import os
 
 from .. import data_dir
 
-__all__ = ['datapath']
+__all__ = ['samplepath']
 
-def datapath(f):
+def samplepath(f):
     return os.path.join(data_dir, f)

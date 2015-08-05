@@ -48,27 +48,5 @@ desktop.ini
 # Emacs
 *~
 
-# PyCharm
-.idea
-
-# ipython
-.ipy*
-*.ipynb
-
-# imagej
-ijmacros/*.txt
-
-# Matlab
-matlab/*/test
-
-# Web Development
-node_modules
-.tmp
-.sass-cache
-bower_components
-
-# Samples
-sample
-
-# HDF5
+# HDF5 samples
 *.h5

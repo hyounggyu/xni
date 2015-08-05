@@ -5,7 +5,7 @@ import h5py
 from PyQt4 import QtGui
 import pyqtgraph as pg
 
-from . import dataset
+from .. import dataset
 
 
 def _swap(data):
@@ -35,13 +35,14 @@ def start_view(args):
 
 
 def start_remoteview(args):
-    ip = '127.0.0.1' if args.ip == None else args.ip
-    port = '5051' if args.port == None else args.port
+    host = '127.0.0.1' if args.host == None else args.host
+    port = 5051 if args.port == None else args.port
     step = 1 if args.step == None else args.step
     timeout = 10 if args.timeout == None else args.timeout
-    print("Connect to tcp://{}:{}...".format(ip, port))
+    print("Connect to {}:{}...".format(host, port))
     try:
-        data = dataset.get(index=(0, None, step), ip=ip, port=port, timeout=timeout)
+        data = dataset.get(index=(0, None, step), host=host, port=port)
+        print('finish')
     except Exception as e:
         print('Exception: {}'.format(e))
         sys.exit(1)
@@ -51,9 +52,8 @@ def start_remoteview(args):
 
 def show(data):
     app = QtGui.QApplication(sys.argv)
-    wins = [ViewWindow(d) for d in data]
-    for win in wins:
-        win.show()
-        win.activateWindow()
-        win.raise_()
+    win = ViewWindow(data)
+    win.show()
+    win.activateWindow()
+    win.raise_()
     return app.exec_()

@@ -12,17 +12,20 @@ def serve(data, host='', port=5051):
     s.listen(1)
     conn, addr = s.accept()
     print('Connected by', addr)
-    r = conn.recv(struct.calcsize('!3i')) # Receive index
-    if not r:
-        raise RuntimeError("socket connection broken")
-    start, end, step = struct.unpack('!3i', r) # Unpacking three integers
-    # end, step values cannot be zero
-    end = None if end == 0 else end
-    step = None if step == 0 else step
-    msg = data[start:end:step].dumps()
-    conn.send(struct.pack('!Q', len(msg)))
-    conn.sendall(msg)
-    conn.close()
+    try:
+        r = conn.recv(struct.calcsize('!3i')) # Receive index
+        if not r: raise RuntimeError("socket connection broken")
+        start, end, step = struct.unpack('!3i', r) # Unpacking three integers
+        # end, step values cannot be zero
+        end = None if end == 0 else end
+        step = None if step == 0 else step
+        msg = data[start:end:step].dumps()
+        conn.send(struct.pack('!Q', len(msg)))
+        conn.sendall(msg)
+    except:
+        pass
+    finally:
+        conn.close()
 
 
 def get(index=(0, None, 1), host='127.0.0.1', port=5051):
@@ -37,13 +40,13 @@ def get(index=(0, None, 1), host='127.0.0.1', port=5051):
     s.sendall(struct.pack('!3i', *idx)) # Packing three integers
     length = s.recv(struct.calcsize('!Q')) # Receive data length
     length, = struct.unpack('!Q', length)
-    data = b''
+    data = []
     recvsize = 0
     while recvsize < length:
         chunk = s.recv(1024)
         if chunk == b'':
             raise RuntimeError("socket connection broken")
         recvsize += len(chunk)
-        data += chunk
+        data.append(chunk)
     s.close()
-    return pickle.loads(data)
+    return pickle.loads(b''.join(data))

@@ -10,12 +10,11 @@ def beam(data, index, _map=map):
     if np.prod(data[np.index_exp[:] + index].shape) == 0:
         raise ValueError('Cannot average. array shape')
     # slice_obj must be tuple
-    seq = map(np.average, data[np.index_exp[:] + index])
-    iavg = fromiter(seq, dtype=data.dtype) # intensity average of each image
+    map_obj = map(np.average, data[np.index_exp[:] + index])
+    iavg = fromiter(map_obj, dtype=data.dtype) # intensity average of each image
     iavg = iavg - np.average(iavg) # distance from all average
-    map_obj = _map(np.subtract, data, iavg)
 
-    return fromiter(map_obj, dtype=data.dtype), iavg
+    return iavg
 
 
 def avg_imgs(imgs):
@@ -28,7 +27,8 @@ def avg_imgs(imgs):
     return img
 
 
-def absorp(data, bg, dk=None, _map=map):
+def norm(data, bg, dk=None, beam_power=None, _map=map):
+    map_obj = None
     _bg = avg_imgs(bg)
 
     if dk is None:
@@ -37,5 +37,8 @@ def absorp(data, bg, dk=None, _map=map):
         _dk = avg_imgs(dk)
         f = lambda im: (im - _dk) / (_bg - _dk)
 
-    map_obj = _map(f, data)
+    if beam_power is not None:
+        map_obj = _map(np.subtract, data, beam_power)
+
+    map_obj = _map(f, map_obj or data)
     return fromiter(map_obj, dtype=data.dtype)

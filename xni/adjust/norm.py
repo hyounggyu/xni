@@ -1,44 +1,26 @@
 import numpy as np
 
+from ..calc.image import average, shift
 from ..util import fromiter
 
 
-def beam(data, index, _map=map):
-    '''
-    return normalised data, average
-    '''
-    if np.prod(data[np.index_exp[:] + index].shape) == 0:
-        raise ValueError('Cannot average. array shape')
-    # slice_obj must be tuple
-    map_obj = map(np.average, data[np.index_exp[:] + index])
-    iavg = fromiter(map_obj, dtype=data.dtype) # intensity average of each image
-    iavg = iavg - np.average(iavg) # distance from all average
-
-    return iavg
-
-
-def avg_imgs(imgs):
-    if len(imgs.shape) == 3:
-        img = np.average(imgs, axis=0)
-    elif len(imgs.shape) == 2:
-        img = imgs
-    else:
-        raise TypeError('2d or 3d')
-    return img
-
-
-def norm(data, bg, dk=None, beam_power=None, _map=map):
+def norm(data, bg, dk=None, beam_power=None, beam_center=None, _map=map):
     map_obj = None
-    _bg = avg_imgs(bg)
+    _bg = average(bg)
 
-    if dk is None:
-        f = lambda im: im / _bg
-    else:
-        _dk = avg_imgs(dk)
-        f = lambda im: (im - _dk) / (_bg - _dk)
+    if dk is not None:
+        _dk = average(dk)
+        _bg = _bg - _dk
+        map_obj = _map(lambda im: np.subtract(im, _dk), map_obj or data)
 
     if beam_power is not None:
-        map_obj = _map(np.subtract, data, beam_power)
+        map_obj = _map(np.subtract, map_obj or data, beam_power)
 
-    map_obj = _map(f, map_obj or data)
+    if beam_center is not None:
+        _norm = lambda im, pos: im / shift(_bg, pos, cval=1.0)
+        map_obj = _map(_norm, map_obj or data, beam_center)
+    else:
+        _norm = lambda im: im / _bg
+        map_obj = _map(_norm, map_obj or data)
+
     return fromiter(map_obj, dtype=data.dtype)

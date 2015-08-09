@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose
 
 from xni import sample
 from xni import dataset
-from xni.adjust import align
+from xni.calc import align
 
 def test_valign():
     data = dataset.load(sample.path('rot420px.h5'), grp='/', dset='data')

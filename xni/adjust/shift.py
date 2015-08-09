@@ -28,7 +28,7 @@ def crop_index(pos):
         return np.index_exp[:pos_min]
 
 
-def shift2d(data, vt=None, ht=None, crop=True, _map=map):
+def shiftall(data, vt=None, ht=None, crop=True, _map=map):
     '''
     vt: float or sequence
     ht: float or sequence

@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.ndimage.interpolation import shift as ndshift
 
 
 def average(imgs):
@@ -10,7 +9,3 @@ def average(imgs):
     else:
         raise TypeError('2d or 3d')
     return img
-
-
-def shift(*args, **kwargs):
-    return ndshift(*args, **kwargs)

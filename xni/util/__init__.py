@@ -1,9 +1,4 @@
-import collections
+from ._crop import crop_index
+from ._util import fromiter, isvector
 
-import numpy as np
-
-def fromiter(iter_obj, dtype='f4'):
-    return np.array(list(iter_obj), dtype=dtype)
-
-def isvector(val):
-    return isinstance(val, (collections.Sequence, np.ndarray))
+__all__ = ['crop_index', 'fromiter', 'isvector']

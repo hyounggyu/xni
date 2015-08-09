@@ -1,27 +1,44 @@
 import numpy as np
 from scipy.ndimage.interpolation import shift as ndshift
 
-from ..calc.image import average
 from ..util import fromiter
 
 
-def norm(data, bg, dk=None, beam_power=None, beam_center=None, _map=map):
-    map_obj = None
-    _bg = average(bg)
+def set_normfunc(bg, dk=None):
+    '''
+    bg: 2d
+    dk: 2d
+    '''
+    def normfunc(im, bp=None, bc=None):
+        '''
+        im: 2d image
+        bp: beam power value
+        bc: beam center
+        '''
+        _bg = bg
+        _dk = dk
+        if _dk is not None:
+            im = im - _dk
+            _bg = _bg - _dk
+        if bp is not None:
+            im = im - bp
+        if bc is not None:
+            _bg = ndshift(_bg, bc, mode='constant', cval=1.0)
+        res = (im / _bg)
+        return res
+    return normfunc
 
-    if dk is not None:
-        _dk = average(dk)
-        _bg = _bg - _dk
-        map_obj = _map(lambda im: np.subtract(im, _dk), map_obj or data)
 
-    if beam_power is not None:
-        map_obj = _map(np.subtract, map_obj or data, beam_power)
-
-    if beam_center is not None:
-        _norm = lambda im, pos: im / ndshift(_bg, pos, cval=1.0)
-        map_obj = _map(_norm, map_obj or data, beam_center)
-    else:
-        _norm = lambda im: im / _bg
-        map_obj = _map(_norm, map_obj or data)
-
+def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, _map=map):
+    '''
+    data: 3d
+    bg: 2d
+    dk: 2d
+    beam_power: sequence of intensity values
+    beam_center: sequence of (yt, xt)
+    '''
+    normfunc = set_normfunc(bg, dk=dk)
+    bp = [None]*data.shape[0] if beam_power is None else beam_power
+    bc = [None]*data.shape[0] if beam_center is None else beam_center
+    map_obj = _map(normfunc, data, bp, bc)
     return fromiter(map_obj, dtype=data.dtype)

@@ -3,6 +3,7 @@ import argparse
 
 from .io import create
 
+
 def parse_args():
     parser = argparse.ArgumentParser(prog='xni.manage')
     parser.add_argument('--version', help='version help')
@@ -16,6 +17,10 @@ def parse_args():
     create_parser.add_argument('-b', '--background-prefix', help='background image prefix help', required=False)
     create_parser.add_argument('-d', '--dark-prefix', help='dark image prefix help', required=False)
     create_parser.set_defaults(func=start_create)
+
+    info_parser = subparsers.add_parser('info', help='info help')
+    info_parser.add_argument('filename', help='filename help')
+    info_parser.set_defaults(func=start_info)
 
     args = parser.parse_args()
     if hasattr(args, 'func'):
@@ -39,5 +44,16 @@ def start_create(args):
     darks = [str(im) for im in darks]
     for i, name in create(args.output, images, bgnds, darks):
         print(i, name)
+
+
+def start_info(args):
+    import h5py
+    fname = args.filename
+    with h5py.File(fname, 'r') as f:
+        for dset in f:
+            print(dset)
+            for d in f[dset]:
+                print('-', d)
+
 
 parse_args()

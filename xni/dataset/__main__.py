@@ -1,7 +1,8 @@
 from pathlib import Path
 import argparse
 
-from .io import create
+from . import io
+from . import comm
 
 
 def parse_args():
@@ -21,6 +22,10 @@ def parse_args():
     info_parser = subparsers.add_parser('info', help='info help')
     info_parser.add_argument('filename', help='filename help')
     info_parser.set_defaults(func=start_info)
+
+    serve_parser = subparsers.add_parser('serve', help='serve help')
+    serve_parser.add_argument('filename', help='filename help')
+    serve_parser.set_defaults(func=start_serve)
 
     args = parser.parse_args()
     if hasattr(args, 'func'):
@@ -42,7 +47,7 @@ def start_create(args):
     images = [str(im) for im in images]
     bgnds = [str(im) for im in bgnds]
     darks = [str(im) for im in darks]
-    for i, name in create(args.output, images, bgnds, darks):
+    for i, name in io.create(args.output, images, bgnds, darks):
         print(i, name)
 
 
@@ -54,6 +59,11 @@ def start_info(args):
             print(dset)
             for d in f[dset]:
                 print('-', d)
+
+
+def start_serve(args):
+    data = io.load(args.filename)
+    comm.serve(data)
 
 
 parse_args()

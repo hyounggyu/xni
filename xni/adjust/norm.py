@@ -41,7 +41,8 @@ def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, crop=True, _m
     '''
     data.flags.writeable = False
     bg.flags.writeable = False
-    dk.flags.writeable = False
+    if dk is not None:
+        dk.flags.writeable = False
 
     normfunc = set_normfunc(bg, dk=dk)
     bp = [None]*data.shape[0] if beam_power is None else beam_power

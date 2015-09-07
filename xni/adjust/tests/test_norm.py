@@ -54,4 +54,4 @@ def test_norm_all3():
     res = norm.norm_all(np.array([im, im]), bg, dk=dk, beam_power=np.array([bp,bp]), beam_center=np.array([bc, bc]), crop=True)
     real = ndshift(np.zeros(im.shape, dtype=im.dtype)+r2, bc, mode='constant', cval=r3)
     real = np.array([real, real])
-    assert_allclose(real[:,2:,2:], res)
+    assert_allclose(real[:,2:,1:], res)

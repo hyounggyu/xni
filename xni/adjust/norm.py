@@ -37,7 +37,7 @@ def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, crop=True, _m
     bg: 2d
     dk: 2d
     beam_power: sequence of intensity values
-    beam_center: sequence of (yt, xt)
+    beam_center: sequence of [(yt0, xt0), (yt1, xt1) ...]
     '''
     data.flags.writeable = False
     bg.flags.writeable = False
@@ -51,6 +51,6 @@ def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, crop=True, _m
     res = fromiter(map_obj, dtype=data.dtype)
 
     if beam_center is not None and crop:
-        return res[np.index_exp[:]+crop_index(bc[0])+crop_index(bc[1])]
+        return res[np.index_exp[:]+crop_index(bc.T[0])+crop_index(bc.T[1])]
     else:
         return res

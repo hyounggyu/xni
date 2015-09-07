@@ -7,10 +7,9 @@ def valign(data, _map=map):
     '''
     data: 3d volume data (0:2pi, top:bottom, left:right)
     '''
-    d = np.sum(data, axis=2) # axis 2 is left-right
-    map_obj = _map(corr1d, d, d[1:])
+    map_obj = _map(corr2d, data, data[1:])
     res = fromiter(map_obj, dtype=data.dtype)
-    res = np.cumsum(res)
+    res = np.cumsum(res.T[0])
     res = -1.0 * np.insert(res, 0, 0)
     return res
 

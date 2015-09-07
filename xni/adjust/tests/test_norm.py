@@ -44,7 +44,7 @@ def test_norm_all1():
 
 def test_norm_all2():
     norm_func = norm.set_normfunc(bg, dk)
-    res = norm.norm_all(np.array([im, im]), bg, dk=dk, beam_power=np.array([bp,bp]), beam_center=np.array([bc, bc]))
+    res = norm.norm_all(np.array([im, im]), bg, dk=dk, beam_power=np.array([bp,bp]), beam_center=np.array([bc, bc]), crop=False)
     real = ndshift(np.zeros(im.shape, dtype=im.dtype)+r2, bc, mode='constant', cval=r3)
     real = np.array([real, real])
     assert_allclose(real, res)

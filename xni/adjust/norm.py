@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.ndimage.interpolation import shift as ndshift
 
-from ..util import fromiter
+from ..util import fromiter, crop_index
 
 
 def set_normfunc(bg, dk=None):
@@ -15,21 +15,23 @@ def set_normfunc(bg, dk=None):
         bp: beam power value
         bc: beam center
         '''
+        _im = im
         _bg = bg
         _dk = dk
-        if _dk is not None:
-            im = im - _dk
+
+        if dk is not None:
+            _im = _im - _dk
             _bg = _bg - _dk
         if bp is not None:
-            im = im - bp
+            _im = _im - bp
         if bc is not None:
             _bg = ndshift(_bg, bc, mode='constant', cval=1.0)
-        res = (im / _bg)
+        res = (_im / _bg)
         return res
     return normfunc
 
 
-def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, _map=map):
+def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, crop=True, _map=map):
     '''
     data: 3d
     bg: 2d
@@ -37,8 +39,17 @@ def norm_all(data, bg, dk=None, beam_power=None, beam_center=None, _map=map):
     beam_power: sequence of intensity values
     beam_center: sequence of (yt, xt)
     '''
+    data.flags.writeable = False
+    bg.flags.writeable = False
+    dk.flags.writeable = False
+
     normfunc = set_normfunc(bg, dk=dk)
     bp = [None]*data.shape[0] if beam_power is None else beam_power
     bc = [None]*data.shape[0] if beam_center is None else beam_center
     map_obj = _map(normfunc, data, bp, bc)
-    return fromiter(map_obj, dtype=data.dtype)
+    res = fromiter(map_obj, dtype=data.dtype)
+
+    if beam_center is not None and crop:
+        return res[np.index_exp[:]+crop_index(bc[0])+crop_index(bc[1])]
+    else:
+        return res

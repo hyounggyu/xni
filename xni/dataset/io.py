@@ -38,7 +38,7 @@ def load(filename, grp='original', dset='images', dtype='f4'):
     default datatype is 4byte float
     '''
     with h5py.File(filename, 'r') as f:
-        dset = f[grp][dset]
-        with dset.astype(dtype):
-            out = dset[:]
+        d = f[grp][dset]
+        with d.astype(dtype):
+            out = d[:]
     return out

@@ -46,6 +46,8 @@ def serve(data, host='', port=5051):
     if not r: raise RuntimeError("socket connection broken")
     conn.send(getheader(data))
     conn.sendall(data.astype(DTYPE).tobytes()) # Big endian 32bit float
+    conn.close()
+    s.close()
 
 
 def get(host='127.0.0.1', port=5051):

@@ -1,6 +1,7 @@
 import numpy as np
 
-from ._util import isvector
+from xni.core.util import isvector
+
 
 def absceil(val):
     if np.abs(np.around(val)-val) < np.finfo(type(val)).eps:

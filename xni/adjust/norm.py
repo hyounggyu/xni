@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.ndimage.interpolation import shift as ndshift
 
-from ..util import fromiter, crop_index
+from xni.core.util import fromiter
+
+from .crop import crop_index
 
 
 def set_normfunc(bg, dk=None):

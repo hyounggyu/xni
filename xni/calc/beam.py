@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..util import fromiter
+from xni.core.util import fromiter
 
 from .corr import corr2d
 
@@ -22,6 +22,9 @@ def power(data, index, _map=map):
 
 
 def center(data, bg, _map=map):
+    '''
+    Deprecated.
+    '''
     if len(bg.shape) == 3:
         _bg = np.average(bg, axis=0)
     elif len(bg.shape) == 2:

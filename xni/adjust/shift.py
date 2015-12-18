@@ -1,11 +1,29 @@
 import numpy as np
 from scipy.ndimage.interpolation import shift as ndshift
 
-from ..util import fromiter, isvector, crop_index
+from xni.core.util import fromiter, isvector
+
+from .crop import crop_index
 
 
-def shift_all(data, vt=0.0, ht=0.0, crop=True, _map=map):
+def shift2d(data, t=0.0):
     '''
+    t: float or sequence
+    '''
+    ret = None
+    if isvector(t):
+        map_obj = map(ndshift, data, t)
+        ret = fromiter(map_obj)
+    else:
+        ret = ndshift(data, (0.0, t))
+
+    return ret
+
+
+def shift3d(data, vt=0.0, ht=0.0, crop=True, _map=map):
+    '''
+    Shift 2-D all images
+
     vt: float or sequence
     ht: float or sequence
     '''
@@ -21,9 +39,9 @@ def shift_all(data, vt=0.0, ht=0.0, crop=True, _map=map):
 
     pos = np.vstack((vt, ht)).T
     map_obj = _map(ndshift, data, pos)
-    result = fromiter(map_obj)
+    ret = fromiter(map_obj)
 
     if crop:
-        return result[np.index_exp[:]+crop_index(vt)+crop_index(ht)]
+        return ret[np.index_exp[:]+crop_index(vt)+crop_index(ht)]
     else:
-        return result
+        return ret

@@ -4,6 +4,7 @@ from scipy.ndimage.interpolation import shift as ndshift
 
 from xni.adjust import norm
 
+
 im = np.zeros((5,5), dtype='f4') + 12.0
 bg = np.zeros(im.shape, dtype=im.dtype) + 4.0
 dk = np.zeros(im.shape, dtype=im.dtype) + 2.0
@@ -14,6 +15,7 @@ r1 = 5.0 # (12.0 - 2.0) / (4.0 - 2.0)
 r2 = 4.5 # 12.0 - 1.0; (11.0 - 2.0) / (4.0 - 2.0)
 r3 = 9.0 # 12.0 - 1.0; (11.0 - 2.0)
 
+
 def test_normfunc1():
     '''
     no dark field
@@ -22,6 +24,7 @@ def test_normfunc1():
     res = norm_func(im)
     real = np.zeros(im.shape, dtype=im.dtype)+r0
     assert_allclose(real, res)
+
 
 def test_normfunc2():
     norm_func = norm.set_normfunc(bg, dk)

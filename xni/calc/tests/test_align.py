@@ -5,6 +5,7 @@ from xni import sample
 from xni import dataset
 from xni.calc import align
 
+
 def test_valign():
     data = dataset.load(sample.path('rot420px.h5'), grp='/', dset='data')
     res = align.valign(data)

@@ -8,6 +8,8 @@ requirements:
     - setuptools
   run:
     - python
+    - anaconda
+#   - ipyparallel
 
 about:
   home: https://github.com/hyounggyu/xni

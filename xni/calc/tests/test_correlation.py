@@ -4,7 +4,9 @@ from scipy.ndimage.interpolation import shift as ndshift
 
 from xni.calc import corr
 
+
 ntry = 100
+
 
 def test_corr1d():
     A = np.array([1, 3, 5, 3, 1], dtype=np.double)
